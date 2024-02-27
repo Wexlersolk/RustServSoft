@@ -3,6 +3,24 @@ name = "letsgetrusty"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+path = "src/lib.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
+ 
+[[bin]]
+path = "src/main.rs"
+name = "letsgetrusty"
+ 
 [dependencies]
+actix-web = "^4" 
+uuid = { version = "^0.8", features = ["v4"]} 
+serde = { version = "^1", features = ["derive"]} 
+env_logger = "0.8"
+log = "^0.4"
+strum_macros = "^0.24"
+strum = { version = "^0.24", features = ["derive"]} 
+tokio = { version = "1.0", features = ["full"]}
+sqlx = { version = "0.6.3", features = ["postgres", "runtime-tokio-rustls"]}
+
+[dev-dependencies]
+reqwest = "0.11"
