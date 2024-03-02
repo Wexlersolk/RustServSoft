@@ -2,9 +2,9 @@ use sqlx::PgPool;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
 use uuid::Uuid;
-use zero2prod::configuration::get_configuration;
-use zero2prod::configuration::{get_configuration, DatabaseSettings};
-use zero2prod::startup::run;
+use letsgetrusty::configuration::get_configuration;
+use letsgetrusty::configuration::{get_configuration, DatabaseSettings};
+use letsgetrusty::startup::run;
 
 pub struct TestApp {
     pub address: String,
