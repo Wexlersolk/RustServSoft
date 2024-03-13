@@ -3,7 +3,7 @@ use dotenv::dotenv;
 use serde::Deserialize;
 use std::env;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Settings {
     pub database: DatabaseSettings,
     pub application_port: u16,
@@ -11,7 +11,7 @@ pub struct Settings {
 
 #[derive(Deserialize, Debug)]
 pub struct DatabaseSettings {
-    pub user: String,
+    pub db_user: String,
     pub password: String,
     pub db_port: u16,
     pub host: String,
@@ -28,20 +28,26 @@ impl DatabaseSettings {
     pub fn connection_string_without_db(&self) -> String {
         format!(
             "postgres://{}:{}@{}:{}",
-            self.user, self.password, self.host, self.db_port
+            self.db_user, self.password, self.host, self.db_port
         )
     }
 }
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
+    let application_port = env::var("PORT").expect("No application_port");
+    let db_settings = get_db_settings().expect("Failed to get db_settings");
+     
+}
+
+pub fn get_db_settings() -> Result<DatabaseSettings, config::ConfigError> {
     dotenv().ok();
-    let mut settings = Config::default();
+    let mut dbsettings = Config::default();
     for (key, value) in env::vars() {
-        settings.set(
+        println!("{} = {}", key, value);
+        dbsettings.set(
             &format!("{}.{}", env::consts::OS, key.to_ascii_uppercase()),
             value,
         )?;
     }
-
-    settings.try_into()
+    dbsettings.try_into()
 }

@@ -1,12 +1,11 @@
-use uuid::Uuid;
-use letsgetrusty::configuration::{get_configuration, DatabaseSettings};
-use letsgetrusty::startup::run;
+use letsgetrusty::configuration::get_configuration;
  
  
 #[tokio::test]
 async fn successful_connection_to_database() {
-    let mut configuration = get_configuration().expect("Failed to read configuration.");
-    println!("{:?}", configuration.database);
+    let configuration = get_configuration().expect("Failed to read configuration");
+    println!("{:?}", configuration);
+     
 }  
  
   
