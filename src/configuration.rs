@@ -1,4 +1,4 @@
-use config::{self, Config};
+use config::{self, Config, Environment};
 use dotenv::dotenv;
 use serde::Deserialize;
 use std::env;
@@ -34,20 +34,25 @@ impl DatabaseSettings {
 }
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
-    let application_port = env::var("PORT").expect("No application_port");
-    let db_settings = get_db_settings().expect("Failed to get db_settings");
-     
+    dotenv().ok();
+    let application_port = env::var("PORT")
+        .expect("No application_port")
+        .parse()
+        .unwrap();
+    let db_settings = match get_db_settings() {
+        Ok(settings) => settings,
+        Err(e) => return Err(e),
+    };
+    println!("{:?}", db_settings);
+    let settings = Settings {
+        database: db_settings,
+        application_port,
+    };
+    Ok(settings)
 }
 
 pub fn get_db_settings() -> Result<DatabaseSettings, config::ConfigError> {
-    dotenv().ok();
     let mut dbsettings = Config::default();
-    for (key, value) in env::vars() {
-        println!("{} = {}", key, value);
-        dbsettings.set(
-            &format!("{}.{}", env::consts::OS, key.to_ascii_uppercase()),
-            value,
-        )?;
-    }
+    dbsettings.merge(Environment::new())?;
     dbsettings.try_into()
 }
