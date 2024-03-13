@@ -9,7 +9,7 @@ pub struct Settings {
     pub application_port: u16,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct DatabaseSettings {
     pub user: String,
     pub password: String,
@@ -34,11 +34,8 @@ impl DatabaseSettings {
 }
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
-    dotenv().ok(); // Load environment variables from the .env file
-
+    dotenv().ok();
     let mut settings = Config::default();
-
-    // Convert env::vars() iterator into Result and iterate over it to merge variables into settings
     for (key, value) in env::vars() {
         settings.set(
             &format!("{}.{}", env::consts::OS, key.to_ascii_uppercase()),
