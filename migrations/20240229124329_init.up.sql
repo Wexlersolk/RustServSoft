@@ -13,3 +13,15 @@ CREATE TABLE IF NOT EXISTS user_table (
     "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+
+INSERT INTO access_table ("access_id", "group_name") VALUES 
+(1, 'regular'),
+(2, 'subscriber'),
+(3, 'admin');
+
+INSERT INTO user_table ("login", "password", "access_id") VALUES 
+('user1', 'password1', 1),
+('user2', 'password2', 2),
+('user3', 'password3', 3);
+

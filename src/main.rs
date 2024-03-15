@@ -6,6 +6,7 @@ use letsgetrusty::startup::run;
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let configuration = get_configuration().expect("Failed to read configuration.");
+    println!("{:?}", configuration.database.connection_string());
     let connection_pool = PgPool::connect(&configuration.database.connection_string())
         .await
         .expect("Failed to connect to Postgres.");
