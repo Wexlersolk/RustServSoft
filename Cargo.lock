@@ -412,6 +412,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits 0.2.18",
+ "serde 1.0.197",
  "wasm-bindgen",
  "windows-targets 0.52.3",
 ]
@@ -1053,6 +1054,7 @@ dependencies = [
  "log",
  "reqwest",
  "serde 1.0.197",
+ "serde_json",
  "sqlx",
  "strum",
  "strum_macros",
@@ -2290,6 +2292,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
 dependencies = [
  "getrandom",
+ "serde 1.0.197",
 ]
 
 [[package]]

@@ -1,14 +1,26 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{http::header::ContentType, web, HttpResponse};
+use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-#[derive(serde::Deserialize)]
- 
+#[derive(serde::Deserialize, serde::Serialize)]
+
 pub struct UserData {
     login: String,
     password: String,
     access_id: i32,
 }
+
+#[derive(serde::Deserialize, serde::Serialize)]
+
+pub struct UseredData {
+    user_id: uuid::Uuid,
+    login: String,
+    access_id: i32,
+    created_at: Option<chrono::DateTime<Utc>>,
+    updated_at: Option<chrono::DateTime<Utc>>,
+}
+
 pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> HttpResponse {
     log::info!("Saving new subscriber details in the database");
     match sqlx::query!(
@@ -36,7 +48,8 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
 }
 
 pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
-    match sqlx::query!(
+    match sqlx::query_as!(
+        UseredData,
         "SELECT user_id, login, access_id, created_at, updated_at FROM user_table"
     )
     .fetch_all(pool.as_ref())
@@ -45,10 +58,12 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
         Ok(users) => {
             log::info!("All users have been fetched");
             for user in &users {
-                println!("User ID: {}, Login: {}, Access ID: {}", 
-                    user.user_id, user.login, user.access_id);
+                println!(
+                    "User ID: {}, Login: {}, Access ID: {}",
+                    user.user_id, user.login, user.access_id
+                );
             }
-            HttpResponse::Ok().finish()
+            HttpResponse::Ok().content_type(ContentType::json()).body(serde_json::to_string(&users).unwrap())
         }
         Err(e) => {
             log::error!("Failed to fetch users: {}", e);
