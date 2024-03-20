@@ -1,4 +1,4 @@
-use crate::routes::{health_check, new_user, get_all_users, new_book, get_all_books, new_comment, get_all_comments};
+use crate::routes::*;
 use actix_web::dev::Server;
 use actix_web::{web, App, HttpServer};
 use sqlx::PgPool;
@@ -10,6 +10,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
         App::new()
             .route("/health_check", web::get().to(health_check))
             .route("/get_all_users", web::get().to(get_all_users))
+            .route("/get_user/{user_id}", web::get().to(get_user))
             .route("/new_user", web::post().to(new_user))
             .route("/new_book", web::post().to(new_book))
             .route("/get_all_books", web::get().to(get_all_books))

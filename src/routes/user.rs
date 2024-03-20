@@ -1,4 +1,4 @@
-use actix_web::{http::header::ContentType, web, HttpResponse};
+use actix_web::{http::header::ContentType, web, HttpRequest, HttpResponse};
 use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -63,10 +63,36 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
                     user.user_id, user.login, user.access_id
                 );
             }
-            HttpResponse::Ok().content_type(ContentType::json()).body(serde_json::to_string(&users).unwrap())
+            HttpResponse::Ok()
+                .content_type(ContentType::json())
+                .body(serde_json::to_string(&users).unwrap())
         }
         Err(e) => {
             log::error!("Failed to fetch users: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
+    let user_id = req.match_info().get("user_id").unwrap();
+    let user_id = Uuid::parse_str(user_id).unwrap();
+    match sqlx::query_as!(
+        UseredData,
+        "SELECT user_id, login, access_id, created_at, updated_at FROM user_table WHERE user_id = $1", 
+        user_id
+    )
+    .fetch_one(pool.as_ref())
+    .await
+    {
+        Ok(user) => {
+            log::info!("One user has been fetched");
+            HttpResponse::Ok()
+                .content_type(ContentType::json())
+                .body(serde_json::to_string(&user).unwrap())
+        }
+        Err(e) => {
+            log::error!("Failed to fetch user: {}", e);
             HttpResponse::InternalServerError().finish()
         }
     }
