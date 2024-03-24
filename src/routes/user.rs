@@ -21,11 +21,11 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
     let user_id = Uuid::new_v4();
     match sqlx::query!(
         "
-                    INSERT INTO user_table (user_id, login, password, access_id)
-                    VALUES ($1, $2, $3, $4)
-                    ",
+        INSERT INTO user_table (user_id, login, password, access_id)
+        VALUES ($1, $2, $3, $4)
+        ",
         user_id,
-        form.login,
+        &form.login,
         digest(&form.password),
         form.access_id
     )
@@ -38,6 +38,11 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
         }
         Err(e) => {
             println!("Failed to execute query: {}", e);
+            if let Some(db_error) = e.as_database_error() {
+                if db_error.constraint().is_some() {
+                    return HttpResponse::Conflict().body("User with this login already exists");
+                }
+            }
             HttpResponse::InternalServerError().finish()
         }
     }
