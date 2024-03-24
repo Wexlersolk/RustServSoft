@@ -1,13 +1,13 @@
 use actix_web::{http::header::ContentType, web, HttpRequest, HttpResponse};
 use chrono::Utc;
 use serde_json::json;
+use sha256::digest;
 use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 
 pub struct UserData {
-    user_id: uuid::Uuid,
     login: String,
     password: String,
     access_id: i32,
@@ -20,12 +20,12 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
     let user_id = Uuid::new_v4();
     match sqlx::query!(
         "
-                    INSERT INTO user_table (user_id, login, password, access_id)
-                    VALUES ($1, $2, $3, $4)
-                    ",
+        INSERT INTO user_table (user_id, login, password, access_id)
+        VALUES ($1, $2, $3, $4)
+        ",
         user_id,
-        form.login,
-        form.password,
+        &form.login,
+        digest(&form.password),
         form.access_id
     )
     .execute(pool.as_ref())
@@ -36,22 +36,28 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
             HttpResponse::Ok().body(format!("{}", user_id))
         }
         Err(e) => {
-            println!("Failed to execute query: {}", e);
-            HttpResponse::InternalServerError().finish()
+            log::error!("Failed to create user: {}", e);
+            HttpResponse::InternalServerError().body(format!("Failed to create user: {}", e))
         }
     }
 }
 
-pub async fn update_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn update_user(
+    form: web::Form<UserData>,
+    req: HttpRequest,
+    pool: web::Data<PgPool>,
+) -> HttpResponse {
+    let user_id = req.match_info().get("user_id").unwrap();
+    let user_id = Uuid::parse_str(user_id).unwrap();
     match sqlx::query!(
         "
         UPDATE user_table
         SET login = $2, password = $3, access_id = $4
         WHERE user_id = $1
         ",
-        form.user_id,
+        user_id,
         form.login,
-        form.password,
+        digest(&form.password),
         form.access_id
     )
     .execute(pool.as_ref())
@@ -63,14 +69,14 @@ pub async fn update_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> 
         }
         Err(e) => {
             log::error!("Failed to update user: {}", e);
-            HttpResponse::InternalServerError().finish()
+            HttpResponse::InternalServerError().body("Failed to update user")
         }
     }
 }
 pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query_as!(
         UserData,
-        "SELECT user_id, login, password, access_id, created_at, updated_at FROM user_table"
+        "SELECT login, password, access_id, created_at, updated_at FROM user_table"
     )
     .fetch_all(pool.as_ref())
     .await
@@ -83,7 +89,7 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
         }
         Err(e) => {
             log::error!("Failed to fetch users: {}", e);
-            HttpResponse::InternalServerError().finish()
+            HttpResponse::InternalServerError().body("Failed to fetch users")
         }
     }
 }
@@ -108,7 +114,7 @@ pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse
         }
         Err(e) => {
             log::error!("Failed to fetch user: {}", e);
-            HttpResponse::InternalServerError().finish()
+            HttpResponse::InternalServerError().body("Failed to fetch user")
         }
     }
 }
@@ -134,7 +140,7 @@ pub async fn get_user_id(req: HttpRequest, pool: web::Data<PgPool>) -> HttpRespo
         }
         Err(e) => {
             log::error!("Failed to fetch user: {}", e);
-            HttpResponse::InternalServerError().finish()
+            HttpResponse::InternalServerError().body("Failed to fetch user")
         }
     }
 }
@@ -152,7 +158,7 @@ pub async fn delete_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpRespo
         }
         Err(e) => {
             log::error!("Failed to delete user: {}", e);
-            HttpResponse::InternalServerError().finish()
+            HttpResponse::InternalServerError().body("Failed to delete user")
         }
     }
 }
