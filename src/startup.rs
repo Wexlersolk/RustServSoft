@@ -1,5 +1,6 @@
 use crate::routes::*;
 use actix_web::dev::Server;
+use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
 use sqlx::PgPool;
 use std::net::TcpListener;
@@ -8,8 +9,9 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
     let db_pool = web::Data::new(db_pool);
     let server = HttpServer::new(move || {
         App::new()
+            .wrap(Logger::default())
             .route("/new_user", web::post().to(new_user))
-            .route("/update_user", web::put().to(update_user))
+            .route("/update_user/{user_id}", web::put().to(update_user))
             .route("/get_user/{user_id}", web::get().to(get_user))
             .route(
                 "/get_user_id/{login}/{password}",
