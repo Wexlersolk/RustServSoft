@@ -3,6 +3,7 @@ use chrono::Utc;
 use serde_json::json;
 use sqlx::PgPool;
 use uuid::Uuid;
+use sha256::digest;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 
@@ -25,7 +26,7 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
                     ",
         user_id,
         form.login,
-        form.password,
+        digest(&form.password),
         form.access_id
     )
     .execute(pool.as_ref())
@@ -51,7 +52,7 @@ pub async fn update_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> 
         ",
         form.user_id,
         form.login,
-        form.password,
+        digest(&form.password),
         form.access_id
     )
     .execute(pool.as_ref())
