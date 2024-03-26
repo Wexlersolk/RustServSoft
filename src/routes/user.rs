@@ -73,6 +73,7 @@ pub async fn update_user(
         }
     }
 }
+
 pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query_as!(
         UserData,
@@ -119,13 +120,11 @@ pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse
     }
 }
 
-pub async fn get_user_id(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
-    let login = req.match_info().get("login").unwrap();
-    let password = req.match_info().get("password").unwrap();
+pub async fn get_user_id(form: web::Form<UserData>, pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query!(
         "SELECT user_id, access_id FROM user_table WHERE login = $1 AND password = $2",
-        login,
-        password
+        form.login,
+        digest(&form.password)
     )
     .fetch_one(pool.as_ref())
     .await
