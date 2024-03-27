@@ -85,6 +85,7 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
             log::info!("All users have been fetched");
             HttpResponse::Ok()
                 .content_type(ContentType::json())
+                .header("Access-Control-Allow-Origin", "https://9746-91-214-209-175.ngrok-free.app/get_all_users")
                 .body(serde_json::to_string(&users).unwrap())
         }
         Err(e) => {
@@ -119,13 +120,15 @@ pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse
     }
 }
 
-pub async fn get_user_id(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
-    let login = req.match_info().get("login").unwrap();
-    let password = req.match_info().get("password").unwrap();
+pub async fn get_user_id(
+    form: web::Form<UserData>,
+    req: HttpRequest,
+    pool: web::Data<PgPool>,
+) -> HttpResponse {
     match sqlx::query!(
         "SELECT user_id, access_id FROM user_table WHERE login = $1 AND password = $2",
-        login,
-        password
+        form.login,
+        form.password
     )
     .fetch_one(pool.as_ref())
     .await
