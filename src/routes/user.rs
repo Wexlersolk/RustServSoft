@@ -20,13 +20,12 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
     let user_id = Uuid::new_v4();
     match sqlx::query!(
         "
-        INSERT INTO user_table (user_id, login, password, access_id)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO user_table (user_id, login, password)
+        VALUES ($1, $2, $3)
         ",
         user_id,
         &form.login,
         digest(form.password.trim()),
-        form.access_id
     )
     .execute(pool.as_ref())
     .await
@@ -52,13 +51,12 @@ pub async fn update_user(
     match sqlx::query!(
         "
         UPDATE user_table
-        SET login = $2, password = $3, access_id = $4
+        SET login = $2, password = $3
         WHERE user_id = $1
         ",
         user_id,
         form.login,
         digest(&form.password),
-        form.access_id
     )
     .execute(pool.as_ref())
     .await
