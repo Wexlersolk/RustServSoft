@@ -25,7 +25,7 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
         ",
         user_id,
         &form.login,
-        digest(&form.password),
+        digest(form.password.trim()),
         form.access_id
     )
     .execute(pool.as_ref())
@@ -124,7 +124,7 @@ pub async fn get_user_id(form: web::Form<UserData>, pool: web::Data<PgPool>) -> 
     match sqlx::query!(
         "SELECT user_id, access_id FROM user_table WHERE login = $1 AND password = $2",
         form.login,
-        digest(&form.password)
+        digest(form.password.trim())
     )
     .fetch_one(pool.as_ref())
     .await
