@@ -6,11 +6,10 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(serde::Deserialize, serde::Serialize)]
-
 pub struct UserData {
     login: String,
     password: String,
-    access_id: i32,
+    access_id: Option<i32>,
     created_at: Option<chrono::DateTime<Utc>>,
     updated_at: Option<chrono::DateTime<Utc>>,
 }
@@ -25,7 +24,7 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
         ",
         user_id,
         &form.login,
-        digest(form.password.trim()),
+        digest(form.password.trim())
     )
     .execute(pool.as_ref())
     .await
