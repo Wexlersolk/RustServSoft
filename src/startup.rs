@@ -11,7 +11,11 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
         App::new()
             .wrap(Logger::default())
             .route("/new_user", web::post().to(new_user))
-            .route("/update_user/{user_id}", web::put().to(update_user))
+            .route("/update_password/{user_id}", web::put().to(update_password))
+            .route(
+                "/elevate_privileges/{user_id}",
+                web::put().to(elevate_priviliges),
+            )
             .route("/get_user/{user_id}", web::get().to(get_user))
             .route("/get_user_id", web::get().to(get_user_id))
             .route("/get_all_users", web::get().to(get_all_users))

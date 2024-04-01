@@ -1,15 +1,14 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{http::header::ContentType, web, HttpResponse};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-#[derive(serde::Deserialize)]
- 
+#[derive(serde::Deserialize, serde::Serialize)]
 pub struct BookData {
     name: String,
-    author: String, 
+    author: String,
     scores: i32,
     cost: i32,
-    file_name: String
+    file_name: String,
 }
 pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> HttpResponse {
     log::info!("Saving new book details in the database");
@@ -40,19 +39,18 @@ pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> Htt
 }
 
 pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
-    match sqlx::query!(
-        "SELECT book_id, name, author, scores, cost, file_name FROM book_table"
+    match sqlx::query_as!(
+        BookData,
+        "SELECT name, author, scores, cost, file_name FROM book_table"
     )
     .fetch_all(pool.as_ref())
     .await
     {
         Ok(books) => {
             log::info!("All book have been fetched");
-            for book in &books {
-                println!("Book ID: {}, Name: {}, Author: {}, Scores {}, Cost {}, File name {}", 
-                    book.book_id, book.name, book.author, book.scores, book.cost, book.file_name);
-            }
-            HttpResponse::Ok().finish()
+            HttpResponse::Ok()
+                .content_type(ContentType::json())
+                .body(serde_json::to_string(&books).unwrap())
         }
         Err(e) => {
             log::error!("Failed to fetch books: {}", e);
