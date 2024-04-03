@@ -16,11 +16,11 @@ CREATE TABLE IF NOT EXISTS user_table (
 
 CREATE TABLE IF NOT EXISTS book_table (
     "book_id" uuid PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
-    "name" varchar NOT NULL,
-    "author" varchar NOT NULL,
-    "scores" int NOT NULL,
-    "cost" int NOT NULL, 
-    "file_name" varchar NOT NULL,
+    "name" varchar ,
+    "author" uuid NOT NULL REFERENCES user_table(user_id),
+    "score" float,
+    "cost" float, 
+    "file_name" varchar,
     "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
