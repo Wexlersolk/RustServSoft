@@ -85,7 +85,6 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
             log::info!("All users have been fetched");
             HttpResponse::Ok()
                 .content_type(ContentType::json())
-                .header("Access-Control-Allow-Origin", "https://9746-91-214-209-175.ngrok-free.app/get_all_users")
                 .body(serde_json::to_string(&users).unwrap())
         }
         Err(e) => {

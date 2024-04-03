@@ -63,6 +63,6 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
         .fetch_one(&app.db_pool)
         .await
         .expect("Failed to fetch saved subscription.");
-    assert_eq!(saved.login, "le guin");
-    assert_eq!(saved.password, sha256::digest("password"));
+    assert_eq!(saved.login.unwrap(), "le guin");
+    assert_eq!(saved.password.unwrap(), sha256::digest("password"));
 }
