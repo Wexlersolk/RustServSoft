@@ -1,0 +1,137 @@
+openapi: 3.0.0
+info:
+  title: User Management API
+  description: API for managing users
+  version: 1.0.0
+servers:
+  - url: "http://localhost:8080"
+paths:
+  /new_user:
+    post:
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserData"
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+  /update_user/{user_id}:
+    put:
+      summary: Update an existing user
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserData"
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+  /get_user/{user_id}:
+    get:
+      summary: Get user details by ID
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserData"
+        '500':
+          description: Internal Server Error
+  /get_user_id/{login}/{password}:
+    get:
+      summary: Get user ID by login and password
+      parameters:
+        - in: path
+          name: login
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: password
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    format: uuid
+                  access_id:
+                    type: integer
+        '500':
+          description: Internal Server Error
+  /get_all_users:
+    get:
+      summary: Get all users
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserData"
+        '500':
+          description: Internal Server Error
+  /delete_user/{user_id}:
+    delete:
+      summary: Delete a user by ID
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+components:
+  schemas:
+    UserData:
+      type: object
+      properties:
+        login:
+          type: string
+        password:
+          type: string
+        access_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time

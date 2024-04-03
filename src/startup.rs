@@ -21,6 +21,10 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             .route("/get_all_users", web::get().to(get_all_users))
             .route("/delete_user/{user_id}", web::delete().to(delete_user))
             .route("/health_check", web::get().to(health_check))
+            
+           //Books 
+            .route("/new_book", web::post().to(new_book))
+            .route("/get_all_books", web::get().to(get_all_books))
             .app_data(db_pool.clone())
     })
     .listen(listener)?

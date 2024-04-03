@@ -1,28 +1,33 @@
 use actix_web::{http::header::ContentType, web, HttpResponse};
+use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct BookData {
-    name: String,
-    author: String,
-    scores: i32,
-    cost: i32,
-    file_name: String,
+    name: Option<String>,
+    author: Uuid, 
+    score: Option<f64>, 
+    cost: Option<f64>, 
+    file_name: Option<String>, 
+    created_at: Option<chrono::DateTime<Utc>>,
+    updated_at: Option<chrono::DateTime<Utc>>,
 }
+
 pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> HttpResponse {
     log::info!("Saving new book details in the database");
     match sqlx::query!(
         "
-                    INSERT INTO book_table (book_id, name, author, scores, cost, file_name)
-                    VALUES ($1, $2, $3, $4, $5, $6)
-                    ",
-        Uuid::new_v4(),
+        INSERT INTO book_table (name, author, score, cost, file_name, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ",
         form.name,
-        form.author,
-        form.scores,
+        &form.author,
+        form.score,
         form.cost,
-        form.file_name
+        form.file_name,
+        Utc::now(),
+        Utc::now(),
     )
     .execute(pool.as_ref())
     .await
@@ -41,13 +46,13 @@ pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> Htt
 pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query_as!(
         BookData,
-        "SELECT name, author, scores, cost, file_name FROM book_table"
+        "SELECT name, author, score, cost, file_name, created_at, updated_at FROM book_table"
     )
     .fetch_all(pool.as_ref())
     .await
     {
         Ok(books) => {
-            log::info!("All book have been fetched");
+            log::info!("All books have been fetched");
             HttpResponse::Ok()
                 .content_type(ContentType::json())
                 .body(serde_json::to_string(&books).unwrap())
