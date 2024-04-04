@@ -2,13 +2,19 @@ use crate::routes::*;
 use actix_web::dev::Server;
 use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
+use actix_cors::Cors;
 use sqlx::PgPool;
 use std::net::TcpListener;
 
 pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Error> {
     let db_pool = web::Data::new(db_pool);
+
     let server = HttpServer::new(move || {
+        
+        let cors = Cors::permissive();
+        
         App::new()
+            .wrap(cors)
             .wrap(Logger::default())
             .route("/new_user", web::post().to(new_user))
             .route("/update_password/{user_id}", web::put().to(update_password))
