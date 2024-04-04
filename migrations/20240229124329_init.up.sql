@@ -14,12 +14,20 @@ CREATE TABLE IF NOT EXISTS user_table (
     "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+
+CREATE TABLE IF NOT EXISTS genre_table (
+    "genre_id" SERIAL PRIMARY KEY,
+    "genre_name" varchar NOT NULL UNIQUE
+);
+
 CREATE TABLE IF NOT EXISTS book_table (
     "book_id" uuid PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
+	"genre_id" int NOT NULL REFERENCES genre_table(genre_id),
     "name" varchar ,
     "author" uuid NOT NULL REFERENCES user_table(user_id),
+	"cost" float, 
     "score" float,
-    "cost" float, 
+    "downloads" int,
     "file_name" varchar,
     "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -34,6 +42,24 @@ CREATE TABLE IF NOT EXISTS comments_table (
     "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 
 );
+-- ------------------------------------------------------------------------------------------------------
+INSERT INTO genre_table ("genre_name") VALUES 
+('Fantasy'),
+('Science Fiction'),
+('Mystery'),
+('Romance'),
+('Thriller'),
+('Horror'),
+('Historical Fiction'),
+('Non-fiction'),
+('Biography'),
+('Poetry'),
+('Self-help'),
+('Cooking'),
+('Travel'),
+('Young Adult'),
+('Children'),
+('Classic');
 
 INSERT INTO access_table ("access_id", "group_name") VALUES 
 (1, 'regular'),

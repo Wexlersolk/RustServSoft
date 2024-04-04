@@ -6,11 +6,10 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(serde::Deserialize, serde::Serialize)]
-
 pub struct UserData {
-    login: String,
-    password: String,
-    access_id: i32,
+    login: Option<String>,
+    password: Option<String>,
+    access_id: Option<i32>,
     created_at: Option<chrono::DateTime<Utc>>,
     updated_at: Option<chrono::DateTime<Utc>>,
 }
@@ -20,13 +19,12 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
     let user_id = Uuid::new_v4();
     match sqlx::query!(
         "
-        INSERT INTO user_table (user_id, login, password, access_id)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO user_table (user_id, login, password)
+        VALUES ($1, $2, $3)
         ",
         user_id,
-        &form.login,
-        digest(&form.password),
-        form.access_id
+        form.login.clone().unwrap(),
+        digest(form.password.as_ref().unwrap().trim())
     )
     .execute(pool.as_ref())
     .await
@@ -42,7 +40,38 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
     }
 }
 
-pub async fn update_user(
+// pub async fn update_user(
+//     form: web::Form<UserData>,
+//     req: HttpRequest,
+//     pool: web::Data<PgPool>,
+// ) -> HttpResponse {
+//     let user_id = req.match_info().get("user_id").unwrap();
+//     let user_id = Uuid::parse_str(user_id).unwrap();
+//     match sqlx::query!(
+//         "
+//         UPDATE user_table
+//         SET login = $2, password = $3
+//         WHERE user_id = $1
+//         ",
+//         user_id,
+//         form.login,
+//         digest(&form.password),
+//     )
+//     .execute(pool.as_ref())
+//     .await
+//     {
+//         Ok(_) => {
+//             log::info!("User has been updated");
+//             HttpResponse::Ok().finish()
+//         }
+//         Err(e) => {
+//             log::error!("Failed to update user: {}", e);
+//             HttpResponse::InternalServerError().body("Failed to update user")
+//         }
+//     }
+// }
+
+pub async fn update_password(
     form: web::Form<UserData>,
     req: HttpRequest,
     pool: web::Data<PgPool>,
@@ -52,13 +81,11 @@ pub async fn update_user(
     match sqlx::query!(
         "
         UPDATE user_table
-        SET login = $2, password = $3, access_id = $4
+        SET password = $2
         WHERE user_id = $1
         ",
         user_id,
-        form.login,
-        digest(&form.password),
-        form.access_id
+        digest(form.password.as_ref().unwrap().trim())
     )
     .execute(pool.as_ref())
     .await
@@ -73,6 +100,36 @@ pub async fn update_user(
         }
     }
 }
+
+pub async fn elevate_priviliges(
+    req: HttpRequest,
+    pool: web::Data<PgPool>,
+) -> HttpResponse {
+    let user_id = req.match_info().get("user_id").unwrap();
+    let user_id = Uuid::parse_str(user_id).unwrap();
+    match sqlx::query!(
+        "
+        UPDATE user_table
+        SET access_id = $2
+        WHERE user_id = $1
+        ",
+        user_id,
+        3
+    )
+    .execute(pool.as_ref())
+    .await
+    {
+        Ok(_) => {
+            log::info!("User has been updated");
+            HttpResponse::Ok().finish()
+        }
+        Err(e) => {
+            log::error!("Failed to update user: {}", e);
+            HttpResponse::InternalServerError().body("Failed to update user")
+        }
+    }
+}
+
 pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query_as!(
         UserData,
@@ -119,15 +176,11 @@ pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse
     }
 }
 
-pub async fn get_user_id(
-    form: web::Form<UserData>,
-    req: HttpRequest,
-    pool: web::Data<PgPool>,
-) -> HttpResponse {
+pub async fn get_user_id(form: web::Form<UserData>, pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query!(
         "SELECT user_id, access_id FROM user_table WHERE login = $1 AND password = $2",
         form.login,
-        form.password
+        digest(form.password.as_ref().unwrap().trim())
     )
     .fetch_one(pool.as_ref())
     .await

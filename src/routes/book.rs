@@ -6,10 +6,12 @@ use uuid::Uuid;
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct BookData {
     name: Option<String>,
-    author: Uuid, 
-    score: Option<f64>, 
-    cost: Option<f64>, 
-    file_name: Option<String>, 
+    genre_id: i32,
+    author: Uuid,
+    cost: Option<f64>,
+    score: Option<f64>,
+    downloads: Option<i32>,
+    file_name: Option<String>,
     created_at: Option<chrono::DateTime<Utc>>,
     updated_at: Option<chrono::DateTime<Utc>>,
 }
@@ -18,13 +20,15 @@ pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> Htt
     log::info!("Saving new book details in the database");
     match sqlx::query!(
         "
-        INSERT INTO book_table (name, author, score, cost, file_name, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO book_table (name, genre_id, author, cost, score, downloads, file_name, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ",
         form.name,
+        form.genre_id,
         &form.author,
-        form.score,
         form.cost,
+        form.score,
+        form.downloads,
         form.file_name,
         Utc::now(),
         Utc::now(),
@@ -46,7 +50,7 @@ pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> Htt
 pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query_as!(
         BookData,
-        "SELECT name, author, score, cost, file_name, created_at, updated_at FROM book_table"
+        "SELECT name, genre_id, author, cost, score, downloads, file_name, created_at, updated_at FROM book_table"
     )
     .fetch_all(pool.as_ref())
     .await
