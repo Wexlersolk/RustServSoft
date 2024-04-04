@@ -9,6 +9,7 @@ use uuid::Uuid;
 pub struct UserData {
     login: Option<String>,
     password: Option<String>,
+    email: Option<String>,
     access_id: Option<i32>,
     created_at: Option<chrono::DateTime<Utc>>,
     updated_at: Option<chrono::DateTime<Utc>>,
@@ -19,12 +20,13 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
     let user_id = Uuid::new_v4();
     match sqlx::query!(
         "
-        INSERT INTO user_table (user_id, login, password)
-        VALUES ($1, $2, $3)
+        INSERT INTO user_table (user_id, login, password, email)
+        VALUES ($1, $2, $3, $4)
         ",
         user_id,
         form.login.clone().unwrap(),
-        digest(form.password.as_ref().unwrap().trim())
+        digest(form.password.as_ref().unwrap().trim()),
+        form.email
     )
     .execute(pool.as_ref())
     .await
@@ -101,10 +103,7 @@ pub async fn update_password(
     }
 }
 
-pub async fn elevate_priviliges(
-    req: HttpRequest,
-    pool: web::Data<PgPool>,
-) -> HttpResponse {
+pub async fn elevate_priviliges(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
     let user_id = req.match_info().get("user_id").unwrap();
     let user_id = Uuid::parse_str(user_id).unwrap();
     match sqlx::query!(
@@ -133,7 +132,7 @@ pub async fn elevate_priviliges(
 pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query_as!(
         UserData,
-        "SELECT login, password, access_id, created_at, updated_at FROM user_table"
+        "SELECT login, password, email, access_id, created_at, updated_at FROM user_table"
     )
     .fetch_all(pool.as_ref())
     .await

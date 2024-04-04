@@ -67,3 +67,24 @@ pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
         }
     }
 }
+
+pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
+    match sqlx::query_as!(
+        BookData,
+        "SELECT name, genre_id, author, cost, score, downloads, file_name, created_at, updated_at FROM book_table"
+    )
+    .fetch_all(pool.as_ref())
+    .await
+    {
+        Ok(books) => {
+            log::info!("All books have been fetched");
+            HttpResponse::Ok()
+                .content_type(ContentType::json())
+                .body(serde_json::to_string(&books).unwrap())
+        }
+        Err(e) => {
+            log::error!("Failed to fetch books: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
