@@ -42,51 +42,14 @@ pub async fn new_user(form: web::Form<UserData>, pool: web::Data<PgPool>) -> Htt
     }
 }
 
-// pub async fn update_user(
-//     form: web::Form<UserData>,
-//     req: HttpRequest,
-//     pool: web::Data<PgPool>,
-// ) -> HttpResponse {
-//     let user_id = req.match_info().get("user_id").unwrap();
-//     let user_id = Uuid::parse_str(user_id).unwrap();
-//     match sqlx::query!(
-//         "
-//         UPDATE user_table
-//         SET login = $2, password = $3
-//         WHERE user_id = $1
-//         ",
-//         user_id,
-//         form.login,
-//         digest(&form.password),
-//     )
-//     .execute(pool.as_ref())
-//     .await
-//     {
-//         Ok(_) => {
-//             log::info!("User has been updated");
-//             HttpResponse::Ok().finish()
-//         }
-//         Err(e) => {
-//             log::error!("Failed to update user: {}", e);
-//             HttpResponse::InternalServerError().body("Failed to update user")
-//         }
-//     }
-// }
-
-pub async fn update_password(
-    form: web::Form<UserData>,
-    req: HttpRequest,
-    pool: web::Data<PgPool>,
-) -> HttpResponse {
-    let user_id = req.match_info().get("user_id").unwrap();
-    let user_id = Uuid::parse_str(user_id).unwrap();
+pub async fn update_password(form: web::Form<UserData>, pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query!(
         "
         UPDATE user_table
         SET password = $2
-        WHERE user_id = $1
+        WHERE email = $1
         ",
-        user_id,
+        form.email,
         digest(form.password.as_ref().unwrap().trim())
     )
     .execute(pool.as_ref())
@@ -154,7 +117,7 @@ pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse
     let user_id = req.match_info().get("user_id").unwrap();
     let user_id = Uuid::parse_str(user_id).unwrap();
     match sqlx::query!(
-        "SELECT login, access_id FROM user_table WHERE user_id = $1",
+        "SELECT login, access_id, email FROM user_table WHERE user_id = $1",
         user_id
     )
     .fetch_one(pool.as_ref())
@@ -164,7 +127,8 @@ pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse
             log::info!("One user has been fetched");
             let user_data = json!({
                 "login": user.login,
-                "access_id": user.access_id
+                "access_id": user.access_id,
+                "email": user.email
             });
             HttpResponse::Ok().json(user_data)
         }
@@ -177,7 +141,7 @@ pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse
 
 pub async fn get_user_id(form: web::Form<UserData>, pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query!(
-        "SELECT user_id, access_id FROM user_table WHERE login = $1 AND password = $2",
+        "SELECT user_id, access_id, email FROM user_table WHERE login = $1 AND password = $2",
         form.login,
         digest(form.password.as_ref().unwrap().trim())
     )
@@ -188,7 +152,8 @@ pub async fn get_user_id(form: web::Form<UserData>, pool: web::Data<PgPool>) -> 
             log::info!("User has been fetched");
             let user_data = json!({
                 "user_id": user.user_id,
-                "access_id": user.access_id
+                "access_id": user.access_id,
+                "email": user.email
             });
             HttpResponse::Ok().json(user_data)
         }
@@ -199,16 +164,23 @@ pub async fn get_user_id(form: web::Form<UserData>, pool: web::Data<PgPool>) -> 
     }
 }
 
-pub async fn delete_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
-    let user_id = req.match_info().get("user_id").unwrap();
-    let user_id = Uuid::parse_str(user_id).unwrap();
-    match sqlx::query!("DELETE FROM user_table WHERE user_id = $1", user_id)
-        .execute(pool.as_ref())
-        .await
-    {
-        Ok(_) => {
+pub async fn silence(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
+    let login = req.match_info().get("login").unwrap();
+    let result = sqlx::query!(
+        "DELETE FROM user_table WHERE login = $1 RETURNING login",
+        login
+    )
+    .fetch_optional(pool.as_ref())
+    .await;
+
+    match result {
+        Ok(Some(_)) => {
             log::info!("User has been deleted");
             HttpResponse::Ok().finish()
+        }
+        Ok(None) => {
+            log::error!("User with login {} does not exist", login);
+            HttpResponse::NotFound().body("User not found")
         }
         Err(e) => {
             log::error!("Failed to delete user: {}", e);

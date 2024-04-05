@@ -68,7 +68,7 @@ INSERT INTO access_table ("access_id", "group_name") VALUES
 (3, 'admin');
 
 INSERT INTO user_table ("login", "password",  "email" ,"access_id") VALUES 
-('user1', '0b14d501a594442a01c6859541bcb3e8164d183d32937b851835442f69d5c94e', 'lox@gmail.com',    1),
+('user1', '0b14d501a594442a01c6859541bcb3e8164d183d32937b851835442f69d5c94e', 'lox@gmail.com', 1),
 ('user2', '6cf615d5bcaac778352a8f1f3360d23f02f34ec182e259897fd6ce485d7870d4', 'donkey@gmail.com', 2),
 ('user3', '5906ac361a137e2d286465cd6588ebb5ac3f5ae955001100bc41577c3d751764', 'monkey@gmail.com', 3);
 
