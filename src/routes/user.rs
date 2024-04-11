@@ -67,50 +67,73 @@ pub async fn update_password(form: web::Form<UserData>, pool: web::Data<PgPool>)
 }
 
 pub async fn elevate_priviliges(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
-    let user_id = req.match_info().get("user_id").unwrap();
-    let user_id = Uuid::parse_str(user_id).unwrap();
-    match sqlx::query!(
+    let login = req.match_info().get("login").unwrap();
+    let password = req.match_info().get("password").unwrap();
+
+    
+    let correct_password = match sqlx::query!(
         "
         UPDATE user_table
-        SET access_id = $2
-        WHERE user_id = $1
+        SET password = $2
+        WHERE email = $1
         ",
-        user_id,
+        form.email,
+        digest(form.password.as_ref().unwrap().trim())
+    )
+    .fetch_optional(pool.as_ref())
+    .await
+    {
+        Ok(Some(row)) => {
+            
+            let admin_password = digest(password.as_ref().unwrap().trim());
+            admin_password == password.to_string() 
+        }
+        _ => false, 
+    };
+
+    if !correct_password {
+        log::error!("Incorrect password for elevating privileges");
+        return HttpResponse::Unauthorized().body("Incorrect password");
+    }
+
+    
+    match sqlx::query!(
+        "UPDATE user_table SET access_id = $2 WHERE login = $1",
+        login,
         3
     )
     .execute(pool.as_ref())
     .await
     {
         Ok(_) => {
-            log::info!("User has been updated");
+            log::info!("User access privileges have been updated");
             HttpResponse::Ok().finish()
         }
         Err(e) => {
-            log::error!("Failed to update user: {}", e);
-            HttpResponse::InternalServerError().body("Failed to update user")
+            log::error!("Failed to update user access privileges: {}", e);
+            HttpResponse::InternalServerError().body("Failed to update user access privileges")
         }
     }
 }
-
 pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query_as!(
         UserData,
         "SELECT login, password, email, access_id, created_at, updated_at FROM user_table"
     )
-    .fetch_all(pool.as_ref())
-    .await
-    {
-        Ok(users) => {
-            log::info!("All users have been fetched");
-            HttpResponse::Ok()
-                .content_type(ContentType::json())
-                .body(serde_json::to_string(&users).unwrap())
+        .fetch_all(pool.as_ref())
+        .await
+        {
+            Ok(users) => {
+                log::info!("All users have been fetched");
+                HttpResponse::Ok()
+                    .content_type(ContentType::json())
+                    .body(serde_json::to_string(&users).unwrap())
+            }
+            Err(e) => {
+                log::error!("Failed to fetch users: {}", e);
+                HttpResponse::InternalServerError().body("Failed to fetch users")
+            }
         }
-        Err(e) => {
-            log::error!("Failed to fetch users: {}", e);
-            HttpResponse::InternalServerError().body("Failed to fetch users")
-        }
-    }
 }
 
 pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
@@ -164,7 +187,7 @@ pub async fn get_user_id(form: web::Form<UserData>, pool: web::Data<PgPool>) -> 
     }
 }
 
-pub async fn silence(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn delete_user (req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
     let login = req.match_info().get("login").unwrap();
     let result = sqlx::query!(
         "DELETE FROM user_table WHERE login = $1 RETURNING login",

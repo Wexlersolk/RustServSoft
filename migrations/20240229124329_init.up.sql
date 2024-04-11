@@ -43,6 +43,16 @@ CREATE TABLE IF NOT EXISTS comments_table (
     "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 
 );
+
+
+
+CREATE TABLE IF NOT EXISTS admin_table (
+    "password_name" VARCHAR(255) PRIMARY KEY NOT NULL,
+	"password" varchar
+);
+
+
+
 -- ------------------------------------------------------------------------------------------------------
 INSERT INTO genre_table ("genre_name") VALUES 
 ('Fantasy'),
@@ -72,3 +82,6 @@ INSERT INTO user_table ("login", "password",  "email" ,"access_id") VALUES
 ('user2', '6cf615d5bcaac778352a8f1f3360d23f02f34ec182e259897fd6ce485d7870d4', 'donkey@gmail.com', 2),
 ('user3', '5906ac361a137e2d286465cd6588ebb5ac3f5ae955001100bc41577c3d751764', 'monkey@gmail.com', 3);
 
+INSERT INTO admin_table ("password_name", "password") VALUES 
+    ('delete_user', 'be6bdfe81ec4a456a537a4460f1f45e1fe33d30b4e220b0874299b82fd3a71e2'),
+    ('elevate_priveleges', '7f66bd0fcd6a1c01ae6f5c772b36a5fc93a8be12fc2bfa188773ab7b2e0c190e');
