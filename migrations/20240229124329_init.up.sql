@@ -43,6 +43,20 @@ CREATE TABLE IF NOT EXISTS comments_table (
     "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 
 );
+
+
+
+CREATE TABLE IF NOT EXISTS admin_table (
+    "password_name" VARCHAR(255) PRIMARY KEY NOT NULL,
+	"password" varchar
+);
+
+CREATE TABLE IF NOT EXISTS bougt_books (
+    "user_id" uuid REFERENCES user_table(user_id),
+    "book_id" uuid REFERENCES book_table(book_id),
+    PRIMARY KEY ("user_id", "book_id")
+);
+
 -- ------------------------------------------------------------------------------------------------------
 INSERT INTO genre_table ("genre_name") VALUES 
 ('Fantasy'),
