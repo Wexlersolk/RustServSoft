@@ -165,7 +165,7 @@ pub async fn get_user_id(form: web::Json<UserData>, pool: web::Data<PgPool>) -> 
     }
 }
 
-pub async fn silence(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn delete_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
     let login = req.match_info().get("login").unwrap();
     let result = sqlx::query!(
         "DELETE FROM user_table WHERE login = $1 RETURNING login",
