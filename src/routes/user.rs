@@ -20,7 +20,11 @@ pub struct UserData {
     updated_at: Option<chrono::DateTime<Utc>>,
 }
 
-pub async fn new_user(form: web::Json<UserData>, pool: web::Data<PgPool>, secret: web::Data<String>,) -> HttpResponse {
+pub async fn new_user(
+    form: web::Json<UserData>,
+    pool: web::Data<PgPool>,
+    secret: web::Data<String>,
+) -> HttpResponse {
     log::info!("Saving new subscriber details in the database");
     let user_id = Uuid::new_v4();
     match sqlx::query!(
@@ -120,9 +124,11 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
     }
 }
 
-pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
-    let user_id = req.match_info().get("user_id").unwrap();
-    let user_id = Uuid::parse_str(user_id).unwrap();
+pub async fn get_user(
+    auth_token: AuthenticationToken,
+    pool: web::Data<PgPool>,
+) -> HttpResponse {
+    let user_id = auth_token.id;
     match sqlx::query!(
         "SELECT login, access_id, email FROM user_table WHERE user_id = $1",
         user_id
