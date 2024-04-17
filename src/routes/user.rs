@@ -20,7 +20,7 @@ pub struct UserData {
     updated_at: Option<chrono::DateTime<Utc>>,
 }
 
-pub async fn new_user(form: web::Json<UserData>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn new_user(form: web::Json<UserData>, pool: web::Data<PgPool>, secret: web::Data<String>,) -> HttpResponse {
     log::info!("Saving new subscriber details in the database");
     let user_id = Uuid::new_v4();
     match sqlx::query!(
@@ -38,7 +38,11 @@ pub async fn new_user(form: web::Json<UserData>, pool: web::Data<PgPool>) -> Htt
     {
         Ok(_) => {
             log::info!("New user has been created");
-            HttpResponse::Ok().json(json!({"user_id": user_id}))
+            let auth_token = encode_token(user_id, secret).await;
+            let json_response = json!({
+                "jwt_token": auth_token
+            });
+            HttpResponse::Ok().json(json_response)
         }
         Err(e) => {
             log::error!("Failed to create user: {}", e);
