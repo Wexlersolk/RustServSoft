@@ -23,7 +23,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
                 web::put().to(elevate_priviliges),
             )
             .route("/get_user/{user_id}", web::get().to(get_user))
-            .route("/get_user_id", web::get().to(get_user_id))
+            .route("/authorize", web::get().to(authorize))
             .route("/get_all_users", web::get().to(get_all_users))
             .route("/delete_user", web::delete().to(delete_user))
             .route("/health_check", web::get().to(health_check))
@@ -31,10 +31,9 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             .route("/new_book", web::post().to(new_book))
             .route("/get_all_books", web::get().to(get_all_books))
             //JWT
-            .route("/encode_token/{id}", web::get().to(encode_token))
             .route("/decode_token", web::post().to(decode_token))
             .app_data(db_pool.clone())
-            .app_data(web::Data::<String>::new("secret".to_owned()))
+            .app_data(web::Data::<String>::new("Padishah Emperor".to_owned()))
     })
     .listen(listener)?
     .run();

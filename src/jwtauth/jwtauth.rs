@@ -1,45 +1,31 @@
-use actix_web::{ HttpResponse, Scope, web };
-use uuid::Uuid;
+use crate::extractors::authtoken::{AuthenticationToken, Claims};
+use actix_web::{web, HttpResponse, Scope};
+use chrono::{Duration, Utc};
 use jsonwebtoken::{
-    encode,
-    decode,
-    Algorithm,
-    Validation,
-    Header,
-    EncodingKey,
-    DecodingKey,
-    TokenData,
-    errors::Error as JwtError,
+    decode, encode, errors::Error as JwtError, Algorithm, DecodingKey, EncodingKey, Header,
+    TokenData, Validation,
 };
-use serde::{ Serialize, Deserialize };
-use chrono::{ Utc, Duration };
-use crate::extractors::authtoken::{ Claims, AuthenticationToken };
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 
 #[derive(Serialize, Deserialize)]
-pub struct Response {
+struct Response {
     message: String,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct EncodeResponse {
-    message: String,
-    token: String,
-}
 
-pub async fn encode_token(path: web::Path<Uuid>, secret: web::Data<String>) -> HttpResponse {
-    let id: Uuid = path.into_inner();
+pub async fn encode_token(ida: Uuid, secret: web::Data<String>) -> String {
+    let id: Uuid = ida;
     let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
     let claims: Claims = Claims { id, exp };
     let token: String = encode(
-	&Header::default(),
-	&claims,
-	&EncodingKey::from_secret(secret.as_str().as_ref()),
-    ).unwrap();
-    HttpResponse::Ok().json(EncodeResponse {
-	message: "Successfully created account.".to_owned(),
-	token,
-    })
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret.as_str().as_ref()),
+    )
+    .unwrap();
+    token
 }
 
 #[derive(Serialize, Deserialize)]
@@ -50,26 +36,23 @@ pub struct DecodeResponse {
 
 #[derive(Serialize, Deserialize)]
 pub struct DecodeBody {
-    token: String
+    token: String,
 }
 
 pub async fn decode_token(body: web::Json<DecodeBody>, secret: web::Data<String>) -> HttpResponse {
     let token_result: Result<TokenData<Claims>, JwtError> = decode::<Claims>(
-	&body.token,
-	&DecodingKey::from_secret(secret.as_str().as_ref()),
-	&Validation::new(Algorithm::HS256),
+        &body.token,
+        &DecodingKey::from_secret(secret.as_str().as_ref()),
+        &Validation::new(Algorithm::HS256),
     );
 
     match token_result {
-	Ok(token) => HttpResponse::Ok().json(DecodeResponse {
-	    message: "Successfully logged in.".to_owned(),
-	    id: token.claims.id,
-	}),
-	Err(e) => HttpResponse::Unauthorized().json(Response { message: e.to_string() }),
+        Ok(token) => HttpResponse::Ok().json(DecodeResponse {
+            message: "Successfully logged in.".to_owned(),
+            id: token.claims.id,
+        }),
+        Err(e) => HttpResponse::Unauthorized().json(Response {
+            message: e.to_string(),
+        }),
     }
-}
-
-pub async fn protected_route(auth_token: AuthenticationToken) -> Uuid{
-    println!("{:#?}", auth_token);
-    auth_token.id
 }

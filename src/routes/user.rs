@@ -142,9 +142,13 @@ pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse
     }
 }
 
-pub async fn get_user_id(form: web::Json<UserData>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn authorize(
+    form: web::Json<UserData>,
+    pool: web::Data<PgPool>,
+    secret: web::Data<String>,
+) -> HttpResponse {
     match sqlx::query!(
-        "SELECT user_id, access_id, login FROM user_table WHERE email = $1 AND password = $2",
+        "SELECT user_id FROM user_table WHERE email = $1 AND password = $2",
         form.email,
         digest(form.password.as_ref().unwrap().trim())
     )
@@ -153,12 +157,11 @@ pub async fn get_user_id(form: web::Json<UserData>, pool: web::Data<PgPool>) -> 
     {
         Ok(user) => {
             log::info!("User has been fetched");
-            let user_data = json!({
-                "user_id": user.user_id,
-                "access_id": user.access_id,
-                "login": user.login
+            let auth_token = encode_token(user.user_id, secret).await;
+            let json_response = json!({
+                "jwt_token": auth_token
             });
-            HttpResponse::Ok().json(user_data)
+            HttpResponse::Ok().json(json_response)
         }
         Err(e) => {
             log::error!("Failed to fetch user: {}", e);
@@ -167,8 +170,11 @@ pub async fn get_user_id(form: web::Json<UserData>, pool: web::Data<PgPool>) -> 
     }
 }
 
-pub async fn delete_user(auth_token: AuthenticationToken, db_pool: web::Data<PgPool>) -> HttpResponse {
-    let uuid = protected_route(auth_token).await;
+pub async fn delete_user(
+    auth_token: AuthenticationToken,
+    db_pool: web::Data<PgPool>,
+) -> HttpResponse {
+    let uuid = auth_token.id;
     let result = sqlx::query!(
         "DELETE FROM user_table WHERE user_id = $1 RETURNING user_id",
         uuid
