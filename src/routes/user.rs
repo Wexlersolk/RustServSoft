@@ -55,14 +55,15 @@ pub async fn new_user(
     }
 }
 
-pub async fn update_password(form: web::Json<UserData>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn update_password(form: web::Json<UserData>, pool: web::Data<PgPool>, auth_token: AuthenticationToken) -> HttpResponse {
+    let user_id = auth_token.id;
     match sqlx::query!(
         "
         UPDATE user_table
         SET password = $2
-        WHERE email = $1
+        WHERE user_id = $1
         ",
-        form.email,
+        user_id,
         digest(form.password.as_ref().unwrap().trim())
     )
     .execute(pool.as_ref())

@@ -17,7 +17,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             .wrap(cors)
             .wrap(Logger::default())
             .route("/new_user", web::post().to(new_user))
-            .route("/update_password/{user_id}", web::put().to(update_password))
+            .route("/update_password", web::put().to(update_password))
             .route(
                 "/elevate_privileges/{user_id}",
                 web::put().to(elevate_priviliges),
