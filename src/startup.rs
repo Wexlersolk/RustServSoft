@@ -25,15 +25,14 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             .route("/get_user/{user_id}", web::get().to(get_user))
             .route("/get_user_id", web::get().to(get_user_id))
             .route("/get_all_users", web::get().to(get_all_users))
-            .route("/delete_user/{login}", web::delete().to(delete_user))
+            .route("/delete_user", web::delete().to(delete_user))
             .route("/health_check", web::get().to(health_check))
             //Books
             .route("/new_book", web::post().to(new_book))
             .route("/get_all_books", web::get().to(get_all_books))
             //JWT
-            .route("/encode/{id}", web::get().to(encode_token))
-            .route("/decode", web::post().to(decode_token))
-            .route("/protected", web::get().to(protected_route))
+            .route("/encode_token/{id}", web::get().to(encode_token))
+            .route("/decode_token", web::post().to(decode_token))
             .app_data(db_pool.clone())
             .app_data(web::Data::<String>::new("secret".to_owned()))
     })

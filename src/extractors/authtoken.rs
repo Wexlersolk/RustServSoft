@@ -1,4 +1,5 @@
 use std::future::{ Ready, ready };
+use uuid::Uuid;
 use actix_web::{
     web,
     FromRequest,
@@ -20,13 +21,13 @@ use jsonwebtoken::{
 
 #[derive(Serialize, Deserialize)]
 pub struct Claims {
-    pub id: usize,
+    pub id: Uuid,
     pub exp: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthenticationToken {
-    id: usize,
+    pub id: Uuid,
 }
 
 impl FromRequest for AuthenticationToken {

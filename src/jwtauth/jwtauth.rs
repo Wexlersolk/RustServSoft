@@ -1,4 +1,5 @@
 use actix_web::{ HttpResponse, Scope, web };
+use uuid::Uuid;
 use jsonwebtoken::{
     encode,
     decode,
@@ -26,8 +27,8 @@ pub struct EncodeResponse {
     token: String,
 }
 
-pub async fn encode_token(path: web::Path<usize>, secret: web::Data<String>) -> HttpResponse {
-    let id: usize = path.into_inner();
+pub async fn encode_token(path: web::Path<Uuid>, secret: web::Data<String>) -> HttpResponse {
+    let id: Uuid = path.into_inner();
     let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
     let claims: Claims = Claims { id, exp };
     let token: String = encode(
@@ -44,7 +45,7 @@ pub async fn encode_token(path: web::Path<usize>, secret: web::Data<String>) -> 
 #[derive(Serialize, Deserialize)]
 pub struct DecodeResponse {
     message: String,
-    id: usize,
+    id: Uuid,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -68,7 +69,7 @@ pub async fn decode_token(body: web::Json<DecodeBody>, secret: web::Data<String>
     }
 }
 
-pub async fn protected_route(auth_token: AuthenticationToken) -> HttpResponse {
+pub async fn protected_route(auth_token: AuthenticationToken) -> Uuid{
     println!("{:#?}", auth_token);
-    HttpResponse::Ok().json(Response { message: "Authorized".to_owned() })
+    auth_token.id
 }

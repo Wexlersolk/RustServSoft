@@ -1,3 +1,5 @@
+use crate::extractors::authtoken::*;
+use crate::jwtauth::jwtauth::*;
 use actix_web::{
     web::{self},
     HttpRequest, HttpResponse,
@@ -105,7 +107,7 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
     {
         Ok(users) => {
             log::info!("All users have been fetched");
-            HttpResponse::Ok().json(serde_json::to_string(&users).unwrap())
+            HttpResponse::Ok().json(serde_json::to_value(&users).unwrap())
         }
         Err(e) => {
             log::error!("Failed to fetch users: {}", e);
@@ -165,13 +167,13 @@ pub async fn get_user_id(form: web::Json<UserData>, pool: web::Data<PgPool>) -> 
     }
 }
 
-pub async fn delete_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
-    let login = req.match_info().get("login").unwrap();
+pub async fn delete_user(auth_token: AuthenticationToken, db_pool: web::Data<PgPool>) -> HttpResponse {
+    let uuid = protected_route(auth_token).await;
     let result = sqlx::query!(
-        "DELETE FROM user_table WHERE login = $1 RETURNING login",
-        login
+        "DELETE FROM user_table WHERE user_id = $1 RETURNING user_id",
+        uuid
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(db_pool.get_ref())
     .await;
 
     match result {
@@ -180,7 +182,7 @@ pub async fn delete_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpRespo
             HttpResponse::Ok().finish()
         }
         Ok(None) => {
-            log::error!("User with login {} does not exist", login);
+            log::error!("User with login {} does not exist", uuid);
             HttpResponse::NotFound().body("User not found")
         }
         Err(e) => {
