@@ -31,6 +31,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             //Books
             .route("/new_book", web::post().to(new_book))
             .route("/get_all_books", web::get().to(get_all_books))
+            .route("/get_book_image", web::get().to(get_book_image))
             //JWT
             .route("/decode_token", web::post().to(decode_token))
             .app_data(db_pool.clone())

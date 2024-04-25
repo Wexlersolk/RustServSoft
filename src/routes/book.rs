@@ -1,7 +1,9 @@
-use actix_web::{http::header::ContentType, web, HttpResponse};
+use actix_web::{http::header::ContentType, web, HttpRequest, HttpResponse};
 use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
+
+const IMAGE_DIRECTORY: &str = "images/";
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct BookData {
@@ -87,4 +89,38 @@ pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
             HttpResponse::InternalServerError().finish()
         }
     }
+}
+
+pub async fn get_book_image(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
+    let file_path = match sqlx::query!("SELECT file_name FROM book_table")
+        .fetch_all(pool.as_ref())
+        .await
+    {
+        Ok(path) => {
+            log::info!("image path has been fetched");
+            // let path = path[0].file_name.clone().unwrap();
+            let path = "Dune.jpg";
+            format!("{}{}", IMAGE_DIRECTORY, path)
+        }
+        Err(e) => {
+            log::error!("Failed to fetch path: {}", e);
+            return HttpResponse::InternalServerError().finish();
+        }
+    };
+    let file = match actix_files::NamedFile::open_async(
+        // "images/Dune.jpg"
+        file_path,
+    )
+    .await
+    {
+        Ok(file) => {
+            log::info!("image has been fetched");
+            file
+        }
+        Err(e) => {
+            log::error!("Failed to fetch image: {}", e);
+            return HttpResponse::InternalServerError().finish();
+        }
+    };
+    file.into_response(&req)
 }
