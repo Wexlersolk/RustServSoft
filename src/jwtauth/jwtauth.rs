@@ -1,5 +1,5 @@
-use crate::extractors::authtoken::{AuthenticationToken, Claims};
-use actix_web::{web, HttpResponse, Scope};
+use crate::extractors::authtoken::Claims;
+use actix_web::{web, HttpResponse};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{
     decode, encode, errors::Error as JwtError, Algorithm, DecodingKey, EncodingKey, Header,

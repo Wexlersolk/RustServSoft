@@ -18,12 +18,10 @@ This is a WEB API developed in Rust, offering a range of functionalities to faci
 
 Clone the repository
 ```bash
-  
   git clone https://github.com/Wexler763/RustServSoft
 ```
 Navigate to the project directory 
 ```bash
-
   cd letsgetrusty
 ```
 
@@ -44,7 +42,6 @@ then configure a PostgreSQL database using Makefile and those variables
 
 ## Run the application
 ```bash
-  
   cargo run
 ```
 
