@@ -1,6 +1,5 @@
 use crate::jwtauth::jwtauth::*;
 use crate::routes::*;
-use crate::user::*;
 use actix_cors::Cors;
 use actix_web::dev::Server;
 use actix_web::middleware::Logger;
