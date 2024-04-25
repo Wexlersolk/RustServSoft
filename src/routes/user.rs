@@ -127,7 +127,7 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
 
 pub async fn get_user(
     auth_token: AuthenticationToken,
-    pool: web::Data<PgPool>,
+    pool: web::Data<PgPool>
 ) -> HttpResponse {
     let user_id = auth_token.id;
     match sqlx::query!(
@@ -156,7 +156,7 @@ pub async fn get_user(
 pub async fn authorize(
     form: web::Json<UserData>,
     pool: web::Data<PgPool>,
-    secret: web::Data<String>,
+    secret: web::Data<String>
 ) -> HttpResponse {
     match sqlx::query!(
         "SELECT user_id FROM user_table WHERE email = $1 AND password = $2",
@@ -183,7 +183,7 @@ pub async fn authorize(
 
 pub async fn delete_user(
     auth_token: AuthenticationToken,
-    db_pool: web::Data<PgPool>,
+    db_pool: web::Data<PgPool>
 ) -> HttpResponse {
     let uuid = auth_token.id;
     let result = sqlx::query!(

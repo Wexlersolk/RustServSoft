@@ -11,6 +11,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
     let db_pool = web::Data::new(db_pool);
 
     let server = HttpServer::new(move || {
+
         let cors = Cors::permissive();
 
         App::new()
@@ -23,7 +24,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
                 web::put().to(elevate_priviliges),
             )
             .route("/get_user", web::get().to(get_user))
-            .route("/authorize", web::get().to(authorize))
+            .route("/authorize", web::put().to(authorize))
             .route("/get_all_users", web::get().to(get_all_users))
             .route("/delete_user", web::delete().to(delete_user))
             .route("/health_check", web::get().to(health_check))

@@ -8,16 +8,14 @@ use jsonwebtoken::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-
 #[derive(Serialize, Deserialize)]
 struct Response {
     message: String,
 }
 
-
 pub async fn encode_token(ida: Uuid, secret: web::Data<String>) -> String {
     let id: Uuid = ida;
-    let exp: usize = (Utc::now() + Duration::days(365)).timestamp() as usize;
+    let exp: usize = (Utc::now() + Duration::minutes(1)).timestamp() as usize;
     let claims: Claims = Claims { id, exp };
     let token: String = encode(
         &Header::default(),
