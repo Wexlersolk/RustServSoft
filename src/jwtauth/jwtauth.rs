@@ -15,7 +15,7 @@ struct Response {
 
 pub async fn encode_token(ida: Uuid, secret: web::Data<String>) -> String {
     let id: Uuid = ida;
-    let exp: usize = (Utc::now() + Duration::minutes(1)).timestamp() as usize;
+    let exp: usize = (Utc::now() + Duration::minutes(2)).timestamp() as usize;
     let claims: Claims = Claims { id, exp };
     let token: String = encode(
         &Header::default(),
