@@ -10,13 +10,19 @@ const IMAGE_DIRECTORY: &str = "images/";
 pub struct BookData {
     name: Option<String>,
     genre_id: i32,
-    author: Uuid,
+    author: String,
     cost: Option<f64>,
     score: Option<f64>,
     downloads: Option<i32>,
     file_name: Option<String>,
+    img_name: Option<String>,
     created_at: Option<chrono::DateTime<Utc>>,
     updated_at: Option<chrono::DateTime<Utc>>,
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct Info {
+    name: String,
 }
 
 pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> HttpResponse {
@@ -53,7 +59,7 @@ pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> Htt
 pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query_as!(
         BookData,
-        "SELECT name, genre_id, author, cost, score, downloads, file_name, created_at, updated_at FROM book_table"
+        "SELECT name, genre_id, author, cost, score, downloads, file_name, img_name, created_at, updated_at FROM book_table"
     )
     .fetch_all(pool.as_ref())
     .await
@@ -74,7 +80,7 @@ pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
 pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
     match sqlx::query_as!(
         BookData,
-        "SELECT name, genre_id, author, cost, score, downloads, file_name, created_at, updated_at FROM book_table"
+        "SELECT genre_id, name, author, cost, score, downloads, file_name, img_name, created_at, updated_at FROM book_table"
     )
     .fetch_all(pool.as_ref())
     .await
@@ -92,16 +98,18 @@ pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
     }
 }
 
-pub async fn get_book_image(req: HttpRequest, pool: web::Data<PgPool>, data: web::Json<Value>) -> HttpResponse {
-    let identifier = data.0;
-    let file_path = match sqlx::query!("SELECT file_name FROM book_table")
-        .fetch_all(pool.as_ref())
+pub async fn get_book_image(
+    req: HttpRequest,
+    pool: web::Data<PgPool>,
+    data: web::Json<Info>,
+) -> HttpResponse {
+    let file_path = match sqlx::query!("SELECT img_name FROM book_table WHERE name = $1", data.name)
+        .fetch_one(pool.as_ref())
         .await
     {
         Ok(path) => {
             log::info!("image path has been fetched");
-            // let path = path[0].file_name.clone().unwrap();
-            let path = "Dune.jpg";
+            let path = path.img_name.clone().unwrap();
             format!("{}{}", IMAGE_DIRECTORY, path)
         }
         Err(e) => {
@@ -109,11 +117,7 @@ pub async fn get_book_image(req: HttpRequest, pool: web::Data<PgPool>, data: web
             return HttpResponse::InternalServerError().finish();
         }
     };
-    let file = match actix_files::NamedFile::open_async(
-        file_path,
-    )
-    .await
-    {
+    let file = match actix_files::NamedFile::open_async(file_path).await {
         Ok(file) => {
             log::info!("image has been fetched");
             file

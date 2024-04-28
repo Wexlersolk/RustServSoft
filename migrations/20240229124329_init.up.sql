@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS genre_table (
 CREATE TABLE IF NOT EXISTS book_table (
     "book_id" uuid PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
 	"genre_id" int NOT NULL REFERENCES genre_table(genre_id),
-    "name" varchar ,
+    "name" varchar,
     "author" varchar NOT NULL REFERENCES user_table(login),
 	"cost" float, 
     "score" float,
@@ -44,8 +44,6 @@ CREATE TABLE IF NOT EXISTS comments_table (
     "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 
 );
-
-
 
 CREATE TABLE IF NOT EXISTS admin_table (
     "password_name" VARCHAR(255) PRIMARY KEY NOT NULL,
