@@ -1,5 +1,6 @@
 use actix_web::{http::header::ContentType, web, HttpRequest, HttpResponse};
 use chrono::Utc;
+use serde_json::Value;
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -91,7 +92,8 @@ pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
     }
 }
 
-pub async fn get_book_image(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn get_book_image(req: HttpRequest, pool: web::Data<PgPool>, data: web::Json<Value>) -> HttpResponse {
+    let identifier = data.0;
     let file_path = match sqlx::query!("SELECT file_name FROM book_table")
         .fetch_all(pool.as_ref())
         .await
@@ -108,7 +110,6 @@ pub async fn get_book_image(req: HttpRequest, pool: web::Data<PgPool>) -> HttpRe
         }
     };
     let file = match actix_files::NamedFile::open_async(
-        // "images/Dune.jpg"
         file_path,
     )
     .await
