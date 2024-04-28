@@ -1,3 +1,5 @@
+use crate::extractors::authtoken::*;
+use crate::jwtauth::jwtauth::*;
 use actix_web::{
     web::{self},
     HttpRequest, HttpResponse,
@@ -18,7 +20,11 @@ pub struct UserData {
     updated_at: Option<chrono::DateTime<Utc>>,
 }
 
-pub async fn new_user(form: web::Json<UserData>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn new_user(
+    form: web::Json<UserData>,
+    pool: web::Data<PgPool>,
+    secret: web::Data<String>,
+) -> HttpResponse {
     log::info!("Saving new subscriber details in the database");
     let user_id = Uuid::new_v4();
     match sqlx::query!(
@@ -36,7 +42,11 @@ pub async fn new_user(form: web::Json<UserData>, pool: web::Data<PgPool>) -> Htt
     {
         Ok(_) => {
             log::info!("New user has been created");
-            HttpResponse::Ok().json(json!({"user_id": user_id}))
+            let auth_token = encode_token(user_id, secret).await;
+            let json_response = json!({
+                "jwt_token": auth_token
+            });
+            HttpResponse::Ok().json(json_response)
         }
         Err(e) => {
             log::error!("Failed to create user: {}", e);
@@ -45,14 +55,15 @@ pub async fn new_user(form: web::Json<UserData>, pool: web::Data<PgPool>) -> Htt
     }
 }
 
-pub async fn update_password(form: web::Json<UserData>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn update_password(form: web::Json<UserData>, pool: web::Data<PgPool>, auth_token: AuthenticationToken) -> HttpResponse {
+    let user_id = auth_token.id;
     match sqlx::query!(
         "
         UPDATE user_table
         SET password = $2
-        WHERE email = $1
+        WHERE user_id = $1
         ",
-        form.email,
+        user_id,
         digest(form.password.as_ref().unwrap().trim())
     )
     .execute(pool.as_ref())
@@ -105,7 +116,7 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
     {
         Ok(users) => {
             log::info!("All users have been fetched");
-            HttpResponse::Ok().json(serde_json::to_string(&users).unwrap())
+            HttpResponse::Ok().json(serde_json::to_value(&users).unwrap())
         }
         Err(e) => {
             log::error!("Failed to fetch users: {}", e);
@@ -114,9 +125,11 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
     }
 }
 
-pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
-    let user_id = req.match_info().get("user_id").unwrap();
-    let user_id = Uuid::parse_str(user_id).unwrap();
+pub async fn get_user(
+    auth_token: AuthenticationToken,
+    pool: web::Data<PgPool>
+) -> HttpResponse {
+    let user_id = auth_token.id;
     match sqlx::query!(
         "SELECT login, access_id, email FROM user_table WHERE user_id = $1",
         user_id
@@ -140,9 +153,13 @@ pub async fn get_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse
     }
 }
 
-pub async fn get_user_id(form: web::Json<UserData>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn authorize(
+    form: web::Json<UserData>,
+    pool: web::Data<PgPool>,
+    secret: web::Data<String>
+) -> HttpResponse {
     match sqlx::query!(
-        "SELECT user_id, access_id, login FROM user_table WHERE email = $1 AND password = $2",
+        "SELECT user_id FROM user_table WHERE email = $1 AND password = $2",
         form.email,
         digest(form.password.as_ref().unwrap().trim())
     )
@@ -151,12 +168,11 @@ pub async fn get_user_id(form: web::Json<UserData>, pool: web::Data<PgPool>) -> 
     {
         Ok(user) => {
             log::info!("User has been fetched");
-            let user_data = json!({
-                "user_id": user.user_id,
-                "access_id": user.access_id,
-                "login": user.login
+            let auth_token = encode_token(user.user_id, secret).await;
+            let json_response = json!({
+                "jwt_token": auth_token
             });
-            HttpResponse::Ok().json(user_data)
+            HttpResponse::Ok().json(json_response)
         }
         Err(e) => {
             log::error!("Failed to fetch user: {}", e);
@@ -165,13 +181,16 @@ pub async fn get_user_id(form: web::Json<UserData>, pool: web::Data<PgPool>) -> 
     }
 }
 
-pub async fn delete_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
-    let login = req.match_info().get("login").unwrap();
+pub async fn delete_user(
+    auth_token: AuthenticationToken,
+    db_pool: web::Data<PgPool>
+) -> HttpResponse {
+    let uuid = auth_token.id;
     let result = sqlx::query!(
-        "DELETE FROM user_table WHERE login = $1 RETURNING login",
-        login
+        "DELETE FROM user_table WHERE user_id = $1 RETURNING user_id",
+        uuid
     )
-    .fetch_optional(pool.as_ref())
+    .fetch_optional(db_pool.get_ref())
     .await;
 
     match result {
@@ -180,7 +199,7 @@ pub async fn delete_user(req: HttpRequest, pool: web::Data<PgPool>) -> HttpRespo
             HttpResponse::Ok().finish()
         }
         Ok(None) => {
-            log::error!("User with login {} does not exist", login);
+            log::error!("User with login {} does not exist", uuid);
             HttpResponse::NotFound().body("User not found")
         }
         Err(e) => {
