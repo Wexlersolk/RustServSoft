@@ -93,7 +93,7 @@ fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
     for book in books {
         let json_book = json!({
             "name": book.name,
-            "genre_name":book.genre_name,
+            "genre_name": book.genre_name,
             "author": book.author,
             "cost": book.cost,
             "score": book.score,

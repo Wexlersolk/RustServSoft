@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS book_table (
     "score" float,
     "downloads" int,
     "file_name" varchar,
+    "file" bytea,
     "img_name" varchar,
     "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -60,6 +61,9 @@ CREATE VIEW book_view AS
     SELECT name, book_table.genre_id, genre_name, author, cost, score, downloads, file_name, img_name, created_at, updated_at 
     FROM book_table JOIN genre_table ON book_table.genre_id = genre_table.genre_id;
 
+CREATE VIEW book_files AS
+    SELECT file_name, file 
+    FROM book_table;
 -- ------------------------------------------------------------------------------------------------------
 INSERT INTO genre_table ("genre_name") VALUES 
 ('Fantasy'),
