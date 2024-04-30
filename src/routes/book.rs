@@ -1,8 +1,6 @@
 use actix_web::{http::header::ContentType, web, HttpRequest, HttpResponse};
 use chrono::Utc;
-use serde_json::Value;
 use sqlx::PgPool;
-use uuid::Uuid;
 
 const IMAGE_DIRECTORY: &str = "images/";
 
