@@ -109,7 +109,7 @@ pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
 async fn get_books_from_db(pool: web::Data<PgPool>) -> Result<Vec<BookData>, sqlx::Error> {
     sqlx::query_as!(
         BookData,
-        "SELECT name, book_table.genre_id, genre_name, author, cost, score, downloads, file_name, img_name, created_at, updated_at FROM book_table JOIN genre_table ON book_table.genre_id = genre_table.genre_id"
+        "SELECT * FROM book_view"
     )
     .fetch_all(pool.as_ref())
     .await
