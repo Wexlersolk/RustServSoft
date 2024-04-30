@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Utc;
-use serde_json::json;
+use serde_json::{json, Value};
 use sqlx::PgPool;
 
 const IMAGE_DIRECTORY: &str = "images/";
@@ -60,19 +60,7 @@ pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
     match get_books_from_db(pool).await {
         Ok(books) => {
             log::info!("All books have been fetched");
-            let mut json_vec = vec![];
-            for book in books {
-                let json_book = json!({
-                    "name": book.name,
-                    "genre_name":book.genre_name,
-                    "author": book.author,
-                    "cost": book.cost,
-                    "score": book.score,
-                    "downloads": book.downloads,
-                });
-                json_vec.push(json_book)
-            }
-            HttpResponse::Ok().json(json_vec)
+            HttpResponse::Ok().json(create_reduced_info_json(books))
         }
         Err(e) => {
             log::error!("Failed to fetch books: {}", e);
@@ -85,19 +73,7 @@ pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
     match get_books_from_db(pool).await {
         Ok(books) => {
             log::info!("All books have been fetched");
-            let mut json_vec = vec![];
-            for book in books {
-                let json_book = json!({
-                    "name": book.name,
-                    "genre_name":book.genre_name,
-                    "author": book.author,
-                    "cost": book.cost,
-                    "score": book.score,
-                    "downloads": book.downloads,
-                });
-                json_vec.push(json_book)
-            }
-            HttpResponse::Ok().json(json_vec)
+            HttpResponse::Ok().json(create_reduced_info_json(books))
         }
         Err(e) => {
             log::error!("Failed to fetch books: {}", e);
@@ -107,12 +83,25 @@ pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
 }
 
 async fn get_books_from_db(pool: web::Data<PgPool>) -> Result<Vec<BookData>, sqlx::Error> {
-    sqlx::query_as!(
-        BookData,
-        "SELECT * FROM book_view"
-    )
-    .fetch_all(pool.as_ref())
-    .await
+    sqlx::query_as!(BookData, "SELECT * FROM book_view")
+        .fetch_all(pool.as_ref())
+        .await
+}
+
+fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
+    let mut json_vec = vec![];
+    for book in books {
+        let json_book = json!({
+            "name": book.name,
+            "genre_name":book.genre_name,
+            "author": book.author,
+            "cost": book.cost,
+            "score": book.score,
+            "downloads": book.downloads,
+        });
+        json_vec.push(json_book);
+    }
+    json_vec
 }
 
 pub async fn get_book_image(
