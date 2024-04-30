@@ -1,16 +1,16 @@
-use actix_web::{http::header::ContentType, web, HttpRequest, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Utc;
-use serde_json::Value;
+use serde_json::json;
 use sqlx::PgPool;
-use uuid::Uuid;
 
 const IMAGE_DIRECTORY: &str = "images/";
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct BookData {
     name: Option<String>,
-    genre_id: i32,
-    author: String,
+    genre_id: Option<i32>,
+    genre_name: Option<String>,
+    author: Option<String>,
     cost: Option<f64>,
     score: Option<f64>,
     downloads: Option<i32>,
@@ -34,7 +34,7 @@ pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> Htt
         ",
         form.name,
         form.genre_id,
-        &form.author,
+        form.author,
         form.cost,
         form.score,
         form.downloads,
@@ -57,18 +57,22 @@ pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> Htt
 }
 
 pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
-    match sqlx::query_as!(
-        BookData,
-        "SELECT name, genre_id, author, cost, score, downloads, file_name, img_name, created_at, updated_at FROM book_table"
-    )
-    .fetch_all(pool.as_ref())
-    .await
-    {
+    match get_books_from_db(pool).await {
         Ok(books) => {
             log::info!("All books have been fetched");
-            HttpResponse::Ok()
-                .content_type(ContentType::json())
-                .body(serde_json::to_string(&books).unwrap())
+            let mut json_vec = vec![];
+            for book in books {
+                let json_book = json!({
+                    "name": book.name,
+                    "genre_name":book.genre_name,
+                    "author": book.author,
+                    "cost": book.cost,
+                    "score": book.score,
+                    "downloads": book.downloads,
+                });
+                json_vec.push(json_book)
+            }
+            HttpResponse::Ok().json(json_vec)
         }
         Err(e) => {
             log::error!("Failed to fetch books: {}", e);
@@ -78,24 +82,37 @@ pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
 }
 
 pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
-    match sqlx::query_as!(
-        BookData,
-        "SELECT genre_id, name, author, cost, score, downloads, file_name, img_name, created_at, updated_at FROM book_table"
-    )
-    .fetch_all(pool.as_ref())
-    .await
-    {
+    match get_books_from_db(pool).await {
         Ok(books) => {
             log::info!("All books have been fetched");
-            HttpResponse::Ok()
-                .content_type(ContentType::json())
-                .body(serde_json::to_string(&books).unwrap())
+            let mut json_vec = vec![];
+            for book in books {
+                let json_book = json!({
+                    "name": book.name,
+                    "genre_name":book.genre_name,
+                    "author": book.author,
+                    "cost": book.cost,
+                    "score": book.score,
+                    "downloads": book.downloads,
+                });
+                json_vec.push(json_book)
+            }
+            HttpResponse::Ok().json(json_vec)
         }
         Err(e) => {
             log::error!("Failed to fetch books: {}", e);
             HttpResponse::InternalServerError().finish()
         }
     }
+}
+
+async fn get_books_from_db(pool: web::Data<PgPool>) -> Result<Vec<BookData>, sqlx::Error> {
+    sqlx::query_as!(
+        BookData,
+        "SELECT name, book_table.genre_id, genre_name, author, cost, score, downloads, file_name, img_name, created_at, updated_at FROM book_table JOIN genre_table ON book_table.genre_id = genre_table.genre_id"
+    )
+    .fetch_all(pool.as_ref())
+    .await
 }
 
 pub async fn get_book_image(

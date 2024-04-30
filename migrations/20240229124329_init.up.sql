@@ -18,14 +18,14 @@ CREATE TABLE IF NOT EXISTS user_table (
 
 CREATE TABLE IF NOT EXISTS genre_table (
     "genre_id" SERIAL PRIMARY KEY,
-    "genre_name" varchar NOT NULL UNIQUE
+    "genre_name" varchar UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS book_table (
     "book_id" uuid PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
-	"genre_id" int NOT NULL REFERENCES genre_table(genre_id),
+	"genre_id" int REFERENCES genre_table(genre_id),
     "name" varchar,
-    "author" varchar NOT NULL REFERENCES user_table(login),
+    "author" varchar REFERENCES user_table(login),
 	"cost" float, 
     "score" float,
     "downloads" int,
