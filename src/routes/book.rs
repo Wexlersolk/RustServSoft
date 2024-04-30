@@ -1,5 +1,9 @@
-use actix_web::{http::header::ContentType, web, HttpRequest, HttpResponse};
+use std::path::PathBuf;
+
+use actix_files::NamedFile;
+use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Utc;
+use serde_json::{json, Value};
 use sqlx::PgPool;
 
 const IMAGE_DIRECTORY: &str = "images/";
@@ -7,8 +11,9 @@ const IMAGE_DIRECTORY: &str = "images/";
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct BookData {
     name: Option<String>,
-    genre_id: i32,
-    author: String,
+    genre_id: Option<i32>,
+    genre_name: Option<String>,
+    author: Option<String>,
     cost: Option<f64>,
     score: Option<f64>,
     downloads: Option<i32>,
@@ -32,7 +37,7 @@ pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> Htt
         ",
         form.name,
         form.genre_id,
-        &form.author,
+        form.author,
         form.cost,
         form.score,
         form.downloads,
@@ -55,18 +60,10 @@ pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> Htt
 }
 
 pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
-    match sqlx::query_as!(
-        BookData,
-        "SELECT name, genre_id, author, cost, score, downloads, file_name, img_name, created_at, updated_at FROM book_table"
-    )
-    .fetch_all(pool.as_ref())
-    .await
-    {
+    match get_books_from_db(pool).await {
         Ok(books) => {
             log::info!("All books have been fetched");
-            HttpResponse::Ok()
-                .content_type(ContentType::json())
-                .body(serde_json::to_string(&books).unwrap())
+            HttpResponse::Ok().json(create_reduced_info_json(books))
         }
         Err(e) => {
             log::error!("Failed to fetch books: {}", e);
@@ -76,18 +73,10 @@ pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
 }
 
 pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
-    match sqlx::query_as!(
-        BookData,
-        "SELECT genre_id, name, author, cost, score, downloads, file_name, img_name, created_at, updated_at FROM book_table"
-    )
-    .fetch_all(pool.as_ref())
-    .await
-    {
+    match get_books_from_db(pool).await {
         Ok(books) => {
             log::info!("All books have been fetched");
-            HttpResponse::Ok()
-                .content_type(ContentType::json())
-                .body(serde_json::to_string(&books).unwrap())
+            HttpResponse::Ok().json(create_reduced_info_json(books))
         }
         Err(e) => {
             log::error!("Failed to fetch books: {}", e);
@@ -96,34 +85,36 @@ pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
     }
 }
 
-pub async fn get_book_image(
-    req: HttpRequest,
-    pool: web::Data<PgPool>,
-    data: web::Json<Info>,
-) -> HttpResponse {
-    let file_path = match sqlx::query!("SELECT img_name FROM book_table WHERE name = $1", data.name)
-        .fetch_one(pool.as_ref())
+async fn get_books_from_db(pool: web::Data<PgPool>) -> Result<Vec<BookData>, sqlx::Error> {
+    sqlx::query_as!(BookData, "SELECT * FROM book_view")
+        .fetch_all(pool.as_ref())
         .await
-    {
-        Ok(path) => {
-            log::info!("image path has been fetched");
-            let path = path.img_name.clone().unwrap();
-            format!("{}{}", IMAGE_DIRECTORY, path)
-        }
-        Err(e) => {
-            log::error!("Failed to fetch path: {}", e);
-            return HttpResponse::InternalServerError().finish();
-        }
-    };
-    let file = match actix_files::NamedFile::open_async(file_path).await {
-        Ok(file) => {
-            log::info!("image has been fetched");
-            file
-        }
-        Err(e) => {
-            log::error!("Failed to fetch image: {}", e);
-            return HttpResponse::InternalServerError().finish();
-        }
-    };
-    file.into_response(&req)
+}
+
+fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
+    let mut json_vec = vec![];
+    for book in books {
+        let json_book = json!({
+            "name": book.name,
+            "genre_name": book.genre_name,
+            "author": book.author,
+            "cost": book.cost,
+            "score": book.score,
+            "downloads": book.downloads,
+            "img_name": book.img_name,
+        });
+        json_vec.push(json_book);
+    }
+    json_vec
+}
+
+pub async fn get_book_image(req: HttpRequest) -> actix_web::Result<NamedFile> {
+    let path: PathBuf = format!(
+        "./{}{}",
+        IMAGE_DIRECTORY,
+        req.match_info().query("img_name")
+    )
+    .parse()
+    .unwrap();
+    Ok(NamedFile::open(path)?)
 }
