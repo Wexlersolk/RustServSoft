@@ -64,7 +64,7 @@ CREATE VIEW book_view AS
 CREATE VIEW book_files AS
     SELECT file_name, file 
     FROM book_table;
--- ------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
 INSERT INTO genre_table ("genre_name") VALUES 
 ('Fantasy'),
 ('Science Fiction'),

@@ -1,3 +1,6 @@
+use std::path::PathBuf;
+
+use actix_files::NamedFile;
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Utc;
 use serde_json::{json, Value};
@@ -98,40 +101,20 @@ fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
             "cost": book.cost,
             "score": book.score,
             "downloads": book.downloads,
+            "img_name": book.img_name,
         });
         json_vec.push(json_book);
     }
     json_vec
 }
 
-pub async fn get_book_image(
-    req: HttpRequest,
-    pool: web::Data<PgPool>,
-    data: web::Json<Info>,
-) -> HttpResponse {
-    let file_path = match sqlx::query!("SELECT img_name FROM book_table WHERE name = $1", data.name)
-        .fetch_one(pool.as_ref())
-        .await
-    {
-        Ok(path) => {
-            log::info!("image path has been fetched");
-            let path = path.img_name.clone().unwrap();
-            format!("{}{}", IMAGE_DIRECTORY, path)
-        }
-        Err(e) => {
-            log::error!("Failed to fetch path: {}", e);
-            return HttpResponse::InternalServerError().finish();
-        }
-    };
-    let file = match actix_files::NamedFile::open_async(file_path).await {
-        Ok(file) => {
-            log::info!("image has been fetched");
-            file
-        }
-        Err(e) => {
-            log::error!("Failed to fetch image: {}", e);
-            return HttpResponse::InternalServerError().finish();
-        }
-    };
-    file.into_response(&req)
+pub async fn get_book_image(req: HttpRequest) -> actix_web::Result<NamedFile> {
+    let path: PathBuf = format!(
+        "./{}{}",
+        IMAGE_DIRECTORY,
+        req.match_info().query("img_name")
+    )
+    .parse()
+    .unwrap();
+    Ok(NamedFile::open(path)?)
 }
