@@ -1,10 +1,8 @@
-use std::path::PathBuf;
-
-use actix_files::NamedFile;
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{web, HttpResponse};
 use chrono::Utc;
 use serde_json::{json, Value};
 use sqlx::PgPool;
+use std::fs;
 
 const IMAGE_DIRECTORY: &str = "images/";
 
@@ -25,7 +23,7 @@ pub struct BookData {
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Info {
-    name: String,
+    file_name: String,
 }
 
 pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> HttpResponse {
@@ -94,6 +92,7 @@ async fn get_books_from_db(pool: web::Data<PgPool>) -> Result<Vec<BookData>, sql
 fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
     let mut json_vec = vec![];
     for book in books {
+    let image_path = format!("{}{}", IMAGE_DIRECTORY, book.img_name.unwrap());
         let json_book = json!({
             "name": book.name,
             "genre_name": book.genre_name,
@@ -101,20 +100,9 @@ fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
             "cost": book.cost,
             "score": book.score,
             "downloads": book.downloads,
-            "img_name": book.img_name,
+            "img": image_base64::to_base64(&image_path)
         });
         json_vec.push(json_book);
     }
     json_vec
-}
-
-pub async fn get_book_image(req: HttpRequest) -> actix_web::Result<NamedFile> {
-    let path: PathBuf = format!(
-        "./{}{}",
-        IMAGE_DIRECTORY,
-        req.match_info().query("img_name")
-    )
-    .parse()
-    .unwrap();
-    Ok(NamedFile::open(path)?)
 }
