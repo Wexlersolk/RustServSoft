@@ -92,7 +92,7 @@ async fn get_books_from_db(pool: web::Data<PgPool>) -> Result<Vec<BookData>, sql
 fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
     let mut json_vec = vec![];
     for book in books {
-    let image_path = format!("{}{}", IMAGE_DIRECTORY, book.img_name.unwrap());
+        let image_path = format!("{}{}", IMAGE_DIRECTORY, book.img_name.unwrap());
         let json_book = json!({
             "name": book.name,
             "genre_name": book.genre_name,
@@ -105,4 +105,26 @@ fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
         json_vec.push(json_book);
     }
     json_vec
+}
+
+pub async fn get_book_file(
+    pool: web::Data<PgPool>,
+    data: web::Query<Info>,
+) -> HttpResponse {
+    let query = sqlx::query!(
+        "Select file FROM book_files WHERE file_name = $1",
+        data.file_name
+    )
+    .fetch_one(pool.as_ref())
+    .await;
+    match query {
+        Ok(result) => {
+            log::info!("File has been fetched");
+            HttpResponse::Ok().body(result.file.unwrap())
+        }
+        Err(e) => {
+            log::info!("Failed to fetch file {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
 }
