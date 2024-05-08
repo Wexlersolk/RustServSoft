@@ -5,20 +5,20 @@ use actix_web::{
 use chrono::Utc;
 use serde_json::{json, Value};
 use sqlx::PgPool;
+use std::{fs::File, io::Write};
 
 const IMAGE_DIRECTORY: &str = "images/";
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct BookData {
     name: Option<String>,
-    genre_id: Option<i32>,
     genre_name: Option<String>,
     author: Option<String>,
     cost: Option<f64>,
     score: Option<f64>,
     downloads: Option<i32>,
-    file_name: Option<String>,
     img_name: Option<String>,
+    img: Option<String>,
     created_at: Option<chrono::DateTime<Utc>>,
     updated_at: Option<chrono::DateTime<Utc>>,
 }
@@ -28,20 +28,40 @@ pub struct Info {
     file_name: String,
 }
 
-pub async fn new_book(form: web::Form<BookData>, pool: web::Data<PgPool>) -> HttpResponse {
+pub async fn new_book(data: web::Json<BookData>, pool: web::Data<PgPool>) -> HttpResponse {
     log::info!("Saving new book details in the database");
+    let genre_id = match sqlx::query!(
+        "Select * FROM genre_table WHERE genre_name = $1",
+        data.genre_name
+    )
+    .fetch_one(pool.as_ref())
+    .await
+    {
+        Ok(result) => {
+            log::info!("genre_id has been fetched");
+            result.genre_id
+        }
+        Err(e) => {
+            log::info!("Failed to fetch genre_id: {}", e);
+            return HttpResponse::InternalServerError().finish();
+        }
+    };
+    let image_bytes = image_base64::from_base64(data.img.clone().unwrap());
+    let image_path = format!("{}{}", IMAGE_DIRECTORY, data.img_name.as_ref().unwrap());
+    let mut image = File::create(image_path).unwrap();
+    image.write_all(&image_bytes).unwrap();
     match sqlx::query!(
         "
-        INSERT INTO book_table (name, genre_id, author, cost, score, downloads, file_name, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        INSERT INTO book_table (name, genre_id, author, cost, score, downloads, img_name, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9)
         ",
-        form.name,
-        form.genre_id,
-        form.author,
-        form.cost,
-        form.score,
-        form.downloads,
-        form.file_name,
+        data.name,
+        genre_id,
+        data.author,
+        data.cost,
+        data.score,
+        data.downloads,
+        data.img_name,
         Utc::now(),
         Utc::now(),
     )
@@ -86,7 +106,7 @@ pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
 }
 
 async fn get_books_from_db(pool: web::Data<PgPool>) -> Result<Vec<BookData>, sqlx::Error> {
-    sqlx::query_as!(BookData, "SELECT * FROM book_view")
+    sqlx::query_as!(BookData, "SELECT book_view.*, '' as img FROM book_view")
         .fetch_all(pool.as_ref())
         .await
 }
@@ -128,7 +148,11 @@ pub async fn get_book_file(pool: web::Data<PgPool>, data: web::Query<Info>) -> H
     }
 }
 
-pub async fn upload_file(file: Bytes, pool: web::Data<PgPool>,data: web::Query<Info>) -> HttpResponse {
+pub async fn upload_file(
+    file: Bytes,
+    pool: web::Data<PgPool>,
+    data: web::Query<Info>,
+) -> HttpResponse {
     let query = sqlx::query!(
         "INSERT INTO book_table (file_name, file) VALUES ($1, $2)",
         &data.file_name,
