@@ -1,8 +1,10 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{
+    web::{self, Bytes},
+    HttpResponse,
+};
 use chrono::Utc;
 use serde_json::{json, Value};
 use sqlx::PgPool;
-use std::fs;
 
 const IMAGE_DIRECTORY: &str = "images/";
 
@@ -107,10 +109,7 @@ fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
     json_vec
 }
 
-pub async fn get_book_file(
-    pool: web::Data<PgPool>,
-    data: web::Query<Info>,
-) -> HttpResponse {
+pub async fn get_book_file(pool: web::Data<PgPool>, data: web::Query<Info>) -> HttpResponse {
     let query = sqlx::query!(
         "Select file FROM book_files WHERE file_name = $1",
         data.file_name
@@ -124,6 +123,26 @@ pub async fn get_book_file(
         }
         Err(e) => {
             log::info!("Failed to fetch file {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+pub async fn upload_file(file: Bytes, pool: web::Data<PgPool>,data: web::Query<Info>) -> HttpResponse {
+    let query = sqlx::query!(
+        "INSERT INTO book_table (file_name, file) VALUES ($1, $2)",
+        &data.file_name,
+        &file[..]
+    )
+    .execute(pool.as_ref())
+    .await;
+    match query {
+        Ok(_) => {
+            log::info!("File has been uploaded");
+            HttpResponse::Ok().finish()
+        }
+        Err(e) => {
+            log::info!("Upload failed due to {}", e);
             HttpResponse::InternalServerError().finish()
         }
     }
