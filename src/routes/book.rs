@@ -10,22 +10,22 @@ use std::{fs::File, io::Write};
 const IMAGE_DIRECTORY: &str = "images/";
 
 #[derive(serde::Deserialize, serde::Serialize)]
-pub struct BookData {
-    name: Option<String>,
-    genre_name: Option<String>,
-    author: Option<String>,
-    cost: Option<f64>,
-    score: Option<f64>,
-    downloads: Option<i32>,
-    img_name: Option<String>,
-    img: Option<String>,
-    created_at: Option<chrono::DateTime<Utc>>,
-    updated_at: Option<chrono::DateTime<Utc>>,
-}
-
-#[derive(serde::Deserialize, serde::Serialize)]
 pub struct Info {
     file_name: String,
+}
+#[derive(serde::Deserialize, serde::Serialize)]
+
+pub struct BookData {
+    pub name: Option<String>,
+    pub genre_name: Option<String>,
+    pub author: Option<String>,
+    pub cost: Option<f64>,
+    pub score: Option<f64>,
+    pub downloads: Option<i32>,
+    pub img_name: Option<String>,
+    pub img: Option<String>,
+    pub created_at: Option<chrono::DateTime<Utc>>,
+    pub updated_at: Option<chrono::DateTime<Utc>>,
 }
 
 pub async fn new_book(data: web::Json<BookData>, pool: web::Data<PgPool>) -> HttpResponse {

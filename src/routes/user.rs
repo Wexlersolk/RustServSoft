@@ -12,19 +12,15 @@ use uuid::Uuid;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct UserData {
-    login: Option<String>,
-    password: Option<String>,
-    email: Option<String>,
-    access_id: Option<i32>,
-    created_at: Option<chrono::DateTime<Utc>>,
-    updated_at: Option<chrono::DateTime<Utc>>,
+    pub login: Option<String>,
+    pub password: Option<String>,
+    pub email: Option<String>,
+    pub access_id: Option<i32>,
+    pub created_at: Option<chrono::DateTime<Utc>>,
+    pub updated_at: Option<chrono::DateTime<Utc>>,
 }
 
-pub async fn new_user(
-    form: web::Json<UserData>,
-    pool: web::Data<PgPool>,
-    secret: web::Data<String>,
-) -> HttpResponse {
+pub async fn new_user(form: web::Json<UserData>, pool: web::Data<PgPool>, secret: web::Data<String>,) -> HttpResponse {
     log::info!("Saving new subscriber details in the database");
     let user_id = Uuid::new_v4();
     match sqlx::query!(
