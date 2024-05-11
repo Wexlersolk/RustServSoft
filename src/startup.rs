@@ -1,5 +1,4 @@
 use crate::jwtauth::jwtauth::*;
-use actix_files as fs;
 use crate::routes::*;
 use actix_cors::Cors;
 use actix_web::dev::Server;
@@ -30,8 +29,11 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             .route("/health_check", web::get().to(health_check))
             //Books
             .route("/new_book", web::post().to(new_book))
+            .route("/upload_book", web::post().to(upload_file))
             .route("/get_all_books", web::get().to(get_all_books))
-            .route("/get_image/{img_name}", web::get().to(get_book_image))
+            .route("/get_book_file", web::get().to(get_book_file))
+            // .route("/upload_file", web::get().to(upload_file))
+            // .route("/download_file", web::get().to(download_file))
             //JWT
             .route("/decode_token", web::post().to(decode_token))
             .app_data(db_pool.clone())

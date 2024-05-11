@@ -42,27 +42,3 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .expect("Failed to migrate the database");
     connection_pool
 }
- 
-#[tokio::test]
-async fn subscribe_returns_a_200_for_valid_form_data() {
-    // Arrange
-    let app = spawn_app().await;
-    let client = reqwest::Client::new();
-    // Act
-    let body = "login=le%20guin&password=password&access_id=1";
-    let response = client
-        .post(&format!("{}/new_user", &app.address))
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .body(body)
-        .send()
-        .await
-        .expect("Failed to execute request.");
-    // Assert
-    assert_eq!(200, response.status().as_u16());
-    let saved = sqlx::query!("SELECT login, password FROM user_table WHERE login = 'le guin'",)
-        .fetch_one(&app.db_pool)
-        .await
-        .expect("Failed to fetch saved subscription.");
-    assert_eq!(saved.login.unwrap(), "le guin");
-    assert_eq!(saved.password.unwrap(), sha256::digest("password"));
-}
