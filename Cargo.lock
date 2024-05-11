@@ -1283,6 +1283,7 @@ dependencies = [
  "actix-cors",
  "actix-files",
  "actix-web",
+ "base64 0.13.1",
  "chrono",
  "config",
  "dotenv",

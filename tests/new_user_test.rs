@@ -29,7 +29,7 @@ async fn test_new_user() {
         "postgres://{}:{}@{}:{}/{}?sslmode=disable",
         db_user, password, host, port, db_name
     );
-    let pool = PgPool::connect(&database_url).await.expect("error");
+    let pool = PgPool::connect(&database_url).await.expect("Failed to connect to the database");
     let secret = web::Data::new("test_secret".to_string());
 
     let response = new_user(request_payload, web::Data::new(pool.clone()), secret).await;
