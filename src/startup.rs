@@ -33,6 +33,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             .route("/get_all_books", web::get().to(get_all_books))
             .route("/get_sorted_books", web::get().to(get_sorted_books))
             .route("/get_book_file", web::get().to(get_book_file))
+            .route("/get_book_by_id", web::get().to(get_book_by_id))
             // .route("/upload_file", web::get().to(upload_file))
             // .route("/download_file", web::get().to(download_file))
             //Main page 
