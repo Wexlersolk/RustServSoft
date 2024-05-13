@@ -32,15 +32,31 @@ pub async fn get_sorted_books(
     pool: web::Data<PgPool>,
     sorting_params: web::Query<SortedInfo>,
 ) -> HttpResponse {
-    match sqlx::query_as!(
-        BookData,
-        "SELECT book_view.*, '' as img FROM book_view WHERE genre_name = $1 ORDER BY $2 DESC",
-        sorting_params.genre,
-        sorting_params.parameter
-    )
-    .fetch_all(pool.as_ref())
-    .await
-    {
+    let result = match sorting_params.parameter.as_str() {
+        "cost" => {
+        sqlx::query_as!(
+            BookData,
+            "SELECT book_view.*, '' as img FROM book_view WHERE genre_name = $1 ORDER BY cost DESC",
+            sorting_params.genre,
+        )
+        .fetch_all(pool.as_ref()).await
+        }
+        "downloads" => {
+            sqlx::query_as!(
+            BookData,
+            "SELECT book_view.*, '' as img FROM book_view WHERE genre_name = $1 ORDER BY downloads DESC",
+            sorting_params.genre,
+        ).fetch_all(pool.as_ref()).await
+    },
+        "score" => {
+        sqlx::query_as!(
+            BookData,
+            "SELECT book_view.*, '' as img FROM book_view WHERE genre_name = $1 ORDER BY downloads DESC",
+            sorting_params.genre,
+        ).fetch_all(pool.as_ref()).await},
+        _ => {return HttpResponse::BadRequest().finish();}
+    };
+    match result {
         Ok(books) => {
             log::info!("All books have been fetched");
             HttpResponse::Ok().json(books)
