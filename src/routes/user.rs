@@ -12,19 +12,15 @@ use uuid::Uuid;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct UserData {
-    login: Option<String>,
-    password: Option<String>,
-    email: Option<String>,
-    access_id: Option<i32>,
-    created_at: Option<chrono::DateTime<Utc>>,
-    updated_at: Option<chrono::DateTime<Utc>>,
+    pub login: Option<String>,
+    pub password: Option<String>,
+    pub email: Option<String>,
+    pub access_id: Option<i32>,
+    pub created_at: Option<chrono::DateTime<Utc>>,
+    pub updated_at: Option<chrono::DateTime<Utc>>,
 }
 
-pub async fn new_user(
-    form: web::Json<UserData>,
-    pool: web::Data<PgPool>,
-    secret: web::Data<String>,
-) -> HttpResponse {
+pub async fn new_user(form: web::Json<UserData>, pool: web::Data<PgPool>, secret: web::Data<String>,) -> HttpResponse {
     log::info!("Saving new subscriber details in the database");
     let user_id = Uuid::new_v4();
     match sqlx::query!(
@@ -55,7 +51,11 @@ pub async fn new_user(
     }
 }
 
-pub async fn update_password(form: web::Json<UserData>, pool: web::Data<PgPool>, auth_token: AuthenticationToken) -> HttpResponse {
+pub async fn update_password(
+    form: web::Json<UserData>,
+    pool: web::Data<PgPool>,
+    auth_token: AuthenticationToken,
+) -> HttpResponse {
     let user_id = auth_token.id;
     match sqlx::query!(
         "
@@ -125,10 +125,7 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
     }
 }
 
-pub async fn get_user(
-    auth_token: AuthenticationToken,
-    pool: web::Data<PgPool>
-) -> HttpResponse {
+pub async fn get_user(auth_token: AuthenticationToken, pool: web::Data<PgPool>) -> HttpResponse {
     let user_id = auth_token.id;
     match sqlx::query!(
         "SELECT login, access_id, email FROM user_table WHERE user_id = $1",
@@ -156,7 +153,7 @@ pub async fn get_user(
 pub async fn authorize(
     form: web::Json<UserData>,
     pool: web::Data<PgPool>,
-    secret: web::Data<String>
+    secret: web::Data<String>,
 ) -> HttpResponse {
     match sqlx::query!(
         "SELECT user_id FROM user_table WHERE email = $1 AND password = $2",
@@ -183,7 +180,7 @@ pub async fn authorize(
 
 pub async fn delete_user(
     auth_token: AuthenticationToken,
-    db_pool: web::Data<PgPool>
+    db_pool: web::Data<PgPool>,
 ) -> HttpResponse {
     let uuid = auth_token.id;
     let result = sqlx::query!(
