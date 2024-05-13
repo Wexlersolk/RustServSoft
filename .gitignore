@@ -1,4 +1,8 @@
 /target
 .env 
+docs.yaml 
+Dockerfile
+docker-compose.yml
+
   
   

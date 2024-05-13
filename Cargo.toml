@@ -2,18 +2,17 @@
 name = "letsgetrusty"
 version = "0.1.0"
 edition = "2021"
-
-[lib]
-path = "src/lib.rs"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
  
 [[bin]]
 path = "src/main.rs"
 name = "letsgetrusty"
  
 [dependencies]
+jsonwebtoken = "*"
 config = "0.11"
+base64 = "0.13"
 actix-web = "^4" 
+actix-cors = "0.6.1"
 uuid = { version = "0.8.1", features = ["v4", "serde"] }
 chrono = {version = "0.4.15", features = ["serde"]}
 serde = { version = "^1", features = ["derive"]} 
@@ -24,11 +23,14 @@ strum = { version = "^0.24", features = ["derive"]}
 tokio = { version = "1.0", features = ["full"]}
 dotenv = "0.15.0"
 serde_json = "1.0.114"
+sha256 = "1.5.0"
+actix-files = "0.6.5"
+image-base64 = "0.1.0"
 [dev-dependencies]
 reqwest = "0.11"
  
 [dependencies.sqlx]
-version = "0.5.7"
+version = "^0.5.0"
 default-features = false
 features = [
 "runtime-actix-rustls",
@@ -36,5 +38,6 @@ features = [
 "postgres",
 "uuid",
 "chrono",
-"migrate"
+"migrate",
+"offline"
 ] 
