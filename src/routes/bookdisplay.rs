@@ -28,6 +28,22 @@ pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
     }
 }
 
+pub async fn get_all_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
+    match sqlx::query_as!(BookData, "SELECT book_view.*, '' as img FROM book_view ORDER BY downloads DESC",)
+        .fetch_all(pool.as_ref())
+        .await
+    {
+        Ok(books) => {
+            log::info!("All books have been fetched");
+            HttpResponse::Ok().json(create_reduced_info_json(books))
+        }
+        Err(e) => {
+            log::error!("Failed to fetch books: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
 pub async fn get_sorted_books(
     pool: web::Data<PgPool>,
     sorting_params: web::Query<SortedInfo>,
