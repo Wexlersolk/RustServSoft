@@ -1,5 +1,77 @@
 {
   "db": "PostgreSQL",
+  "1de3b42ba80f93be8845029141e36a26609bc438aff80050e12b7dc673a045c0": {
+    "describe": {
+      "columns": [
+        {
+          "name": "name",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "genre_name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "author",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "cost",
+          "ordinal": 3,
+          "type_info": "Float8"
+        },
+        {
+          "name": "score",
+          "ordinal": 4,
+          "type_info": "Float8"
+        },
+        {
+          "name": "downloads",
+          "ordinal": 5,
+          "type_info": "Int4"
+        },
+        {
+          "name": "img_name",
+          "ordinal": 6,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 7,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 8,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "img",
+          "ordinal": 9,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT book_view.*, '' as img FROM book_view"
+  },
   "2c9d4ef5e8da9618722921605af5849b89229739f95daeee59bef637b7494330": {
     "describe": {
       "columns": [],
@@ -26,25 +98,25 @@
     },
     "query": "\n        UPDATE user_table\n        SET password = $2\n        WHERE user_id = $1\n        "
   },
-  "3b6b91cbfa8c9d8795847cad5f9de2a88845a52942346b9d91f83e69370910ee": {
+  "3492dd9d0214f836b1e9cb8097664fae2e2a527972b2d4a89da9b9a7e9f96eed": {
     "describe": {
-      "columns": [],
-      "nullable": [],
+      "columns": [
+        {
+          "name": "file",
+          "ordinal": 0,
+          "type_info": "Bytea"
+        }
+      ],
+      "nullable": [
+        true
+      ],
       "parameters": {
         "Left": [
-          "Varchar",
-          "Int4",
-          "Varchar",
-          "Float8",
-          "Float8",
-          "Int4",
-          "Varchar",
-          "Timestamptz",
-          "Timestamptz"
+          "Text"
         ]
       }
     },
-    "query": "\n        INSERT INTO book_table (name, genre_id, author, cost, score, downloads, file_name, created_at, updated_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n        "
+    "query": "Select file FROM book_files WHERE file_name = $1"
   },
   "66c20f70b0f1c3f5b612518db87077703eb844a6225e6ce3738dce06d4156cc6": {
     "describe": {
@@ -66,6 +138,19 @@
       }
     },
     "query": "SELECT user_id FROM user_table WHERE email = $1 AND password = $2"
+  },
+  "74d73acbdfd6e8bf2efd4e6892c561e37ee2991e39c058980eeacd446a210c94": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Bytea"
+        ]
+      }
+    },
+    "query": "INSERT INTO book_table (file_name, file) VALUES ($1, $2)"
   },
   "7b9a7f99d43fb41dd7c866ff73739cc06e2c31b84f31782a3fc4852b546d39fe": {
     "describe": {
@@ -119,78 +204,6 @@
     },
     "query": "SELECT login, access_id, email FROM user_table WHERE user_id = $1"
   },
-  "84e907999819d8d9e55051e6ba7f8dee84ad60aca3b236db2eccd933c68da0ba": {
-    "describe": {
-      "columns": [
-        {
-          "name": "genre_id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "name",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "author",
-          "ordinal": 2,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "cost",
-          "ordinal": 3,
-          "type_info": "Float8"
-        },
-        {
-          "name": "score",
-          "ordinal": 4,
-          "type_info": "Float8"
-        },
-        {
-          "name": "downloads",
-          "ordinal": 5,
-          "type_info": "Int4"
-        },
-        {
-          "name": "file_name",
-          "ordinal": 6,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "img_name",
-          "ordinal": 7,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 8,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 9,
-          "type_info": "Timestamptz"
-        }
-      ],
-      "nullable": [
-        false,
-        true,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "SELECT genre_id, name, author, cost, score, downloads, file_name, img_name, created_at, updated_at FROM book_table"
-  },
   "864f7bff46578ff97ceedc11b92b658437e8f112cb21844a6f99755d22f28a9e": {
     "describe": {
       "columns": [
@@ -239,16 +252,22 @@
     },
     "query": "SELECT login, password, email, access_id, created_at, updated_at FROM user_table"
   },
-  "ad5383b67ea5089bf373d3d5929e1f82ec3dab654d887ee2300e53a902ca3acb": {
+  "a020a7a81aa8ab9d5f6392c39c72a8f6b0ad65f6f2a63b646342c9135380465b": {
     "describe": {
       "columns": [
         {
-          "name": "img_name",
+          "name": "genre_id",
           "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "genre_name",
+          "ordinal": 1,
           "type_info": "Varchar"
         }
       ],
       "nullable": [
+        false,
         true
       ],
       "parameters": {
@@ -257,7 +276,7 @@
         ]
       }
     },
-    "query": "SELECT img_name FROM book_table WHERE name = $1"
+    "query": "Select * FROM genre_table WHERE genre_name = $1"
   },
   "c36c37181a82901cc44624e4b8f508b13aa1d7f4a4a8fd7d76e9c8908eb5a400": {
     "describe": {
@@ -295,77 +314,25 @@
     },
     "query": "SELECT comment_id, comment_text, comment_author, commented_book FROM comments_table"
   },
-  "d78408ebebb7fa1163abeb5f161e45532dbed4a3a62a9d90c79fb2f2c662b847": {
+  "d364bd20cf16460065a020b22eda2fcf6a650d0be8557353cc76ab83d932b3a4": {
     "describe": {
-      "columns": [
-        {
-          "name": "name",
-          "ordinal": 0,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "genre_id",
-          "ordinal": 1,
-          "type_info": "Int4"
-        },
-        {
-          "name": "author",
-          "ordinal": 2,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "cost",
-          "ordinal": 3,
-          "type_info": "Float8"
-        },
-        {
-          "name": "score",
-          "ordinal": 4,
-          "type_info": "Float8"
-        },
-        {
-          "name": "downloads",
-          "ordinal": 5,
-          "type_info": "Int4"
-        },
-        {
-          "name": "file_name",
-          "ordinal": 6,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "img_name",
-          "ordinal": 7,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "created_at",
-          "ordinal": 8,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "updated_at",
-          "ordinal": 9,
-          "type_info": "Timestamptz"
-        }
-      ],
-      "nullable": [
-        true,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
+      "columns": [],
+      "nullable": [],
       "parameters": {
-        "Left": []
+        "Left": [
+          "Varchar",
+          "Int4",
+          "Varchar",
+          "Float8",
+          "Float8",
+          "Int4",
+          "Varchar",
+          "Timestamptz",
+          "Timestamptz"
+        ]
       }
     },
-    "query": "SELECT name, genre_id, author, cost, score, downloads, file_name, img_name, created_at, updated_at FROM book_table"
+    "query": "\n        INSERT INTO book_table (name, genre_id, author, cost, score, downloads, img_name, created_at, updated_at)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9)\n        "
   },
   "e2e87df05720f94b00dcff7b97f152a75f95056fd0146f1acbe61c55d6923b50": {
     "describe": {
