@@ -124,7 +124,7 @@ VALUES
     (1, 'Echoes of Eternity: Beyond the Event Horizon',  'user1',   14.99, 4.7, 200, 'echoes_of_eternity.pdf',           'echoes_of_eternity.jpg'),
     (2, 'The Lost Kingdoms: Legends of Eldoria',         'user3',   10.99, 4.5, 170, 'lost_kingdoms.pdf',                'lost_kingdoms.jpg'),
     (9, 'You Are Here',                         'David Nicholls',   14.99, 4.7, 180, 'you_are_here.pdf',                 'you_are_here.jpg'),
-    (1, 'Skandar and the Chaos Trials',           'A.F Steadman',   13.99, 4.8, 210, 'skandar_and_the_Chaos_trials.pdf', 'skandar_and_the_chaos_trials.pdf'),
+    (1, 'Skandar and the Chaos Trials',           'A.F Steadman',   13.99, 4.8, 210, 'skandar_and_the_Chaos_trials.pdf', 'skandar_and_the_chaos_trials.jpg'),
     (3, 'Someone Else`s Shoes',                     'Jojo Moyes',    7.49, 4.5, 120, 'someone_else`s_shoes.pdf',         'someone_elses_shoes.jpg'),
     (10,'Stop Them Dead',                          'Peter James',    4.99, 3.7,  80, 'stop_them_dead.pdf',               'stop_them_dead.jpg'),
     (11,'The Hairy Dieters',                      'Hairy Bikers',   17.47, 4.8, 250, 'the_hairy_dieters.pdf',            'the_hairy_dieters.jpg'),

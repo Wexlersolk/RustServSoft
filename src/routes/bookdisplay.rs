@@ -67,7 +67,7 @@ pub async fn get_sorted_books(
         "score" => {
         sqlx::query_as!(
             BookData,
-            "SELECT book_view.*, '' as img FROM book_view WHERE genre_name = $1 ORDER BY downloads DESC",
+            "SELECT book_view.*, '' as img FROM book_view WHERE genre_name = $1 ORDER BY score DESC",
             sorting_params.genre,
         ).fetch_all(pool.as_ref()).await},
         _ => {return HttpResponse::BadRequest().finish();}
