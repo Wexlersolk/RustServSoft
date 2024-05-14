@@ -51,7 +51,11 @@ pub async fn new_user(form: web::Json<UserData>, pool: web::Data<PgPool>, secret
     }
 }
 
-pub async fn update_password(form: web::Json<UserData>, pool: web::Data<PgPool>, auth_token: AuthenticationToken) -> HttpResponse {
+pub async fn update_password(
+    form: web::Json<UserData>,
+    pool: web::Data<PgPool>,
+    auth_token: AuthenticationToken,
+) -> HttpResponse {
     let user_id = auth_token.id;
     match sqlx::query!(
         "
@@ -121,41 +125,38 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
     }
 }
 
-// pub async fn get_user(
-//     auth_token: AuthenticationToken,
-//     pool: web::Data<PgPool>
-// ) -> HttpResponse {
-//     let user_id = auth_token.id;
-//     match sqlx::query!(
-//         "SELECT login, access_id, email FROM user_table WHERE user_id = $1",
-//         user_id
-//     )
-//     .fetch_one(pool.as_ref())
-//     .await
-//     {
-//         Ok(user) => {
-//             log::info!("One user has been fetched");
-//             let user_data = json!({
-//                 "login": user.login,
-//                 "access_id": user.access_id,
-//                 "email": user.email
-//             });
-//             HttpResponse::Ok().json(user_data)
-//         }
-//         Err(e) => {
-//             log::error!("Failed to fetch user: {}", e);
-//             HttpResponse::InternalServerError().body("Failed to fetch user")
-//         }
-//     }
-// }
+pub async fn get_user(auth_token: AuthenticationToken, pool: web::Data<PgPool>) -> HttpResponse {
+    let user_id = auth_token.id;
+    match sqlx::query!(
+        "SELECT login, access_id, email FROM user_table WHERE user_id = $1",
+        user_id
+    )
+    .fetch_one(pool.as_ref())
+    .await
+    {
+        Ok(user) => {
+            log::info!("One user has been fetched");
+            let user_data = json!({
+                "login": user.login,
+                "access_id": user.access_id,
+                "email": user.email
+            });
+            HttpResponse::Ok().json(user_data)
+        }
+        Err(e) => {
+            log::error!("Failed to fetch user: {}", e);
+            HttpResponse::InternalServerError().body("Failed to fetch user")
+        }
+    }
+}
 
 pub async fn authorize(
     form: web::Json<UserData>,
     pool: web::Data<PgPool>,
-    secret: web::Data<String>
+    secret: web::Data<String>,
 ) -> HttpResponse {
     match sqlx::query!(
-        "SELECT user_id, login, access_id, email FROM user_table WHERE email = $1 AND password = $2",
+        "SELECT user_id FROM user_table WHERE email = $1 AND password = $2",
         form.email,
         digest(form.password.as_ref().unwrap().trim())
     )
@@ -166,10 +167,7 @@ pub async fn authorize(
             log::info!("User has been fetched");
             let auth_token = encode_token(user.user_id, secret).await;
             let json_response = json!({
-                "jwt_token": auth_token,
-                "login": user.login,
-                "access_id": user.access_id,
-                "email": user.email
+                "jwt_token": auth_token
             });
             HttpResponse::Ok().json(json_response)
         }
@@ -182,7 +180,7 @@ pub async fn authorize(
 
 pub async fn delete_user(
     auth_token: AuthenticationToken,
-    db_pool: web::Data<PgPool>
+    db_pool: web::Data<PgPool>,
 ) -> HttpResponse {
     let uuid = auth_token.id;
     let result = sqlx::query!(
