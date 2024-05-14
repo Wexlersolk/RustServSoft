@@ -6,16 +6,19 @@ use chrono::Utc;
 use serde_json::{json, Value};
 use sqlx::PgPool;
 use std::{fs::File, io::Write};
+use uuid::Uuid;
+
 
 const IMAGE_DIRECTORY: &str = "images/";
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Info {
-    file_name: String,
+    parameter: String,
 }
 #[derive(serde::Deserialize, serde::Serialize)]
 
 pub struct BookData {
+    pub book_id: Option<Uuid>,
     pub name: Option<String>,
     pub genre_name: Option<String>,
     pub author: Option<String>,
@@ -79,43 +82,12 @@ pub async fn new_book(data: web::Json<BookData>, pool: web::Data<PgPool>) -> Htt
     }
 }
 
-pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
-    match get_books_from_db(pool).await {
-        Ok(books) => {
-            log::info!("All books have been fetched");
-            HttpResponse::Ok().json(create_reduced_info_json(books))
-        }
-        Err(e) => {
-            log::error!("Failed to fetch books: {}", e);
-            HttpResponse::InternalServerError().finish()
-        }
-    }
-}
-
-pub async fn get_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
-    match get_books_from_db(pool).await {
-        Ok(books) => {
-            log::info!("All books have been fetched");
-            HttpResponse::Ok().json(create_reduced_info_json(books))
-        }
-        Err(e) => {
-            log::error!("Failed to fetch books: {}", e);
-            HttpResponse::InternalServerError().finish()
-        }
-    }
-}
-
-async fn get_books_from_db(pool: web::Data<PgPool>) -> Result<Vec<BookData>, sqlx::Error> {
-    sqlx::query_as!(BookData, "SELECT book_view.*, '' as img FROM book_view")
-        .fetch_all(pool.as_ref())
-        .await
-}
-
-fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
+pub fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
     let mut json_vec = vec![];
     for book in books {
         let image_path = format!("{}{}", IMAGE_DIRECTORY, book.img_name.unwrap());
         let json_book = json!({
+            "id": book.book_id,
             "name": book.name,
             "genre_name": book.genre_name,
             "author": book.author,
@@ -129,10 +101,25 @@ fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
     json_vec
 }
 
+pub async fn get_book_by_id(pool: web::Data<PgPool>, data: web::Query<Info>) -> HttpResponse{
+    let book_id: Uuid = data.parameter.parse().unwrap();
+    match sqlx::query_as!(BookData,"SELECT book_view.*, '' as img FROM book_view WHERE book_id = $1", book_id).fetch_one(pool.as_ref()).await {
+        Ok(book)=>{
+            log::info!("Book has been fetched");
+            let response = serde_json::to_value(&book).unwrap(); 
+            HttpResponse::Ok().json(response)
+        }
+        Err(e) =>{
+            log::info!("Failed to fetch book {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
 pub async fn get_book_file(pool: web::Data<PgPool>, data: web::Query<Info>) -> HttpResponse {
     let query = sqlx::query!(
         "Select file FROM book_files WHERE file_name = $1",
-        data.file_name
+        data.parameter
     )
     .fetch_one(pool.as_ref())
     .await;
@@ -155,7 +142,7 @@ pub async fn upload_file(
 ) -> HttpResponse {
     let query = sqlx::query!(
         "INSERT INTO book_table (file_name, file) VALUES ($1, $2)",
-        &data.file_name,
+        &data.parameter,
         &file[..]
     )
     .execute(pool.as_ref())
@@ -171,3 +158,5 @@ pub async fn upload_file(
         }
     }
 }
+
+
