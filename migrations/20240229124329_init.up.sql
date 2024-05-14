@@ -62,7 +62,7 @@ CREATE VIEW book_view AS
     FROM book_table JOIN genre_table ON book_table.genre_id = genre_table.genre_id;
 
 CREATE VIEW book_files AS
-    SELECT file_name, file 
+    SELECT book_id, file 
     FROM book_table;
 ---------------------------------------------------------------------------------------------------------
 INSERT INTO genre_table ("genre_name") VALUES 

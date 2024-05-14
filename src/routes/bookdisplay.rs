@@ -29,7 +29,7 @@ pub async fn get_all_books(pool: web::Data<PgPool>) -> HttpResponse {
 }
 
 pub async fn get_all_sorted_books(pool: web::Data<PgPool>) -> HttpResponse {
-    match sqlx::query_as!(BookData, "SELECT book_view.*, '' as img FROM book_view ORDER BY downloads DESC",)
+    match sqlx::query_as!(BookData, "SELECT book_view.*, '' as img FROM book_view ORDER BY downloads DESC LIMIT 10",)
         .fetch_all(pool.as_ref())
         .await
     {

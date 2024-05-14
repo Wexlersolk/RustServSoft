@@ -5,12 +5,8 @@ pub mod mainpage;
 pub mod bookdisplay;
 mod comments;
 pub use health_check::*;
-pub use user::*;
 pub use book::*;
 pub use comments::*;
 pub use mainpage::*;
 pub use bookdisplay::*;
-
-
-
-
+pub use user::*;

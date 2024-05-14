@@ -2,13 +2,18 @@ use crate::extractors::authtoken::*;
 use crate::jwtauth::jwtauth::*;
 use actix_web::{
     web::{self},
-    HttpRequest, HttpResponse,
+    HttpResponse,
 };
 use chrono::Utc;
 use serde_json::json;
 use sha256::digest;
 use sqlx::PgPool;
 use uuid::Uuid;
+
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct UserInfo {
+    parameter: String,
+}
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct UserData {
@@ -20,7 +25,11 @@ pub struct UserData {
     pub updated_at: Option<chrono::DateTime<Utc>>,
 }
 
-pub async fn new_user(form: web::Json<UserData>, pool: web::Data<PgPool>, secret: web::Data<String>,) -> HttpResponse {
+pub async fn new_user(
+    form: web::Json<UserData>,
+    pool: web::Data<PgPool>,
+    secret: web::Data<String>,
+) -> HttpResponse {
     log::info!("Saving new subscriber details in the database");
     let user_id = Uuid::new_v4();
     match sqlx::query!(
@@ -80,9 +89,8 @@ pub async fn update_password(
     }
 }
 
-pub async fn elevate_priviliges(req: HttpRequest, pool: web::Data<PgPool>) -> HttpResponse {
-    let user_id = req.match_info().get("user_id").unwrap();
-    let user_id = Uuid::parse_str(user_id).unwrap();
+pub async fn elevate_priviliges(pool: web::Data<PgPool>, data: web::Query<UserInfo>) -> HttpResponse {
+    let user_id = Uuid::parse_str(data.parameter.as_str()).unwrap();
     match sqlx::query!(
         "
         UPDATE user_table
@@ -121,31 +129,6 @@ pub async fn get_all_users(pool: web::Data<PgPool>) -> HttpResponse {
         Err(e) => {
             log::error!("Failed to fetch users: {}", e);
             HttpResponse::InternalServerError().body("Failed to fetch users")
-        }
-    }
-}
-
-pub async fn get_user(auth_token: AuthenticationToken, pool: web::Data<PgPool>) -> HttpResponse {
-    let user_id = auth_token.id;
-    match sqlx::query!(
-        "SELECT login, access_id, email FROM user_table WHERE user_id = $1",
-        user_id
-    )
-    .fetch_one(pool.as_ref())
-    .await
-    {
-        Ok(user) => {
-            log::info!("One user has been fetched");
-            let user_data = json!({
-                "login": user.login,
-                "access_id": user.access_id,
-                "email": user.email
-            });
-            HttpResponse::Ok().json(user_data)
-        }
-        Err(e) => {
-            log::error!("Failed to fetch user: {}", e);
-            HttpResponse::InternalServerError().body("Failed to fetch user")
         }
     }
 }

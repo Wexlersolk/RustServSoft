@@ -15,8 +15,8 @@ const IMAGE_DIRECTORY: &str = "images/";
 pub struct Info {
     parameter: String,
 }
-#[derive(serde::Deserialize, serde::Serialize)]
 
+#[derive(serde::Deserialize, serde::Serialize)]
 pub struct BookData {
     pub book_id: Option<Uuid>,
     pub name: Option<String>,
@@ -106,8 +106,8 @@ pub async fn get_book_by_id(pool: web::Data<PgPool>, data: web::Query<Info>) -> 
     match sqlx::query_as!(BookData,"SELECT book_view.*, '' as img FROM book_view WHERE book_id = $1", book_id).fetch_one(pool.as_ref()).await {
         Ok(book)=>{
             log::info!("Book has been fetched");
-            let response = serde_json::to_value(&book).unwrap(); 
-            HttpResponse::Ok().json(response)
+            let books = vec![book];
+            HttpResponse::Ok().json(create_reduced_info_json(books))
         }
         Err(e) =>{
             log::info!("Failed to fetch book {}", e);
@@ -117,9 +117,10 @@ pub async fn get_book_by_id(pool: web::Data<PgPool>, data: web::Query<Info>) -> 
 }
 
 pub async fn get_book_file(pool: web::Data<PgPool>, data: web::Query<Info>) -> HttpResponse {
+    let book_id: Uuid = data.parameter.parse().unwrap();
     let query = sqlx::query!(
-        "Select file FROM book_files WHERE file_name = $1",
-        data.parameter
+        "Select file FROM book_files WHERE book_id = $1",
+        book_id
     )
     .fetch_one(pool.as_ref())
     .await;
