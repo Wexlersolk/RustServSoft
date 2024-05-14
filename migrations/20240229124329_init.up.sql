@@ -94,7 +94,7 @@ INSERT INTO user_table ("login", "password",  "email" ,"access_id") VALUES
 ('user3',          '5906ac361a137e2d286465cd6588ebb5ac3f5ae955001100bc41577c3d751764', 'monkey@gmail.com',         3),
 ('David Nicholls', '6eab73b49ec4fcd0e49e670dd60ed09f0e8041a12deed307e83d41c9f5c9aa3b', 'David_Nicholls@gmail.com', 1),
 ('A.F Steadman',   'a68a34f6b75e4a26544fd726e146b51a1ab2eef3287fdbe86a20fe98c5a2eb36', 'A.F_Steadman@gmail.com',   1),
-('Jojo Moyes',      'c96a0b2a2c59c2c06d2a1a9c20f0fc4c45d17f6a399e78dc63a617a53b138d6d', 'Jojo_Moyes@gmail.com',    1),
+('Jojo Moyes',     'c96a0b2a2c59c2c06d2a1a9c20f0fc4c45d17f6a399e78dc63a617a53b138d6d', 'Jojo_Moyes@gmail.com',    1),
 ('Peter James',    'fad1b1e3df40b84c98042c6df727c8b952937d91b0b40f474ea0f991d1b33e6e', 'Peter_James@gmail.com',    1),
 ('Hairy Biker',    '839fe2a265e6715c7c3d0e8fcdd52f40fc7a3c4d4e0da06c78f0e3c04ff6bb34', 'Hairy_Biker@gmail.com',    1),
 ('Emily Henr',     '8cf937fddfe76068e2a1e8c2e69eeb802c5a4c2cb82c87db66d20d9864c9e8e8', 'Emily_Henr@gmail.com',     1),
