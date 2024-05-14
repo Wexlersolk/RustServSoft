@@ -10,3 +10,4 @@ pub use comments::*;
 pub use mainpage::*;
 pub use bookdisplay::*;
 pub use user::*;
+pub const IMAGE_DIRECTORY: &str = "images/";

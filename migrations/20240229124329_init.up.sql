@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS book_table (
 	"genre_id" int REFERENCES genre_table(genre_id),
     "name" varchar,
     "author" varchar REFERENCES user_table(login),
+    "description" varchar,
 	"cost" float, 
     "score" float,
     "downloads" int,
@@ -58,7 +59,7 @@ CREATE TABLE IF NOT EXISTS bougt_books (
 );
 
 CREATE VIEW book_view AS
-    SELECT book_id, name, genre_name, author, cost, score, downloads, img_name, created_at, updated_at 
+    SELECT book_id, name, genre_name, author, cost, score, description, downloads, img_name, created_at, updated_at 
     FROM book_table JOIN genre_table ON book_table.genre_id = genre_table.genre_id;
 
 CREATE VIEW book_files AS

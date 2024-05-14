@@ -6,11 +6,12 @@ use sqlx::PgPool;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct GenresData {
+    pub genre_id: i32,
     pub genre_name: Option<String>,
 }
 
 pub async fn get_all_genres(pool: web::Data<PgPool>) -> HttpResponse {
-    let query = sqlx::query_as!(GenresData, "Select genre_name FROM genre_table ")
+    let query = sqlx::query_as!(GenresData, "Select * FROM genre_table ")
         .fetch_all(pool.as_ref())
         .await;
     match query {

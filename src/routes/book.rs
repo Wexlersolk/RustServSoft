@@ -1,3 +1,4 @@
+use crate::routes::*;
 use actix_web::{
     web::{self, Bytes},
     HttpResponse,
@@ -7,9 +8,6 @@ use serde_json::{json, Value};
 use sqlx::PgPool;
 use std::{fs::File, io::Write};
 use uuid::Uuid;
-
-
-const IMAGE_DIRECTORY: &str = "images/";
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct Info {
@@ -21,6 +19,7 @@ pub struct BookData {
     pub book_id: Option<Uuid>,
     pub name: Option<String>,
     pub genre_name: Option<String>,
+    pub description: Option<String>,
     pub author: Option<String>,
     pub cost: Option<f64>,
     pub score: Option<f64>,
@@ -90,6 +89,7 @@ pub fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
             "id": book.book_id,
             "name": book.name,
             "genre_name": book.genre_name,
+            "description": book.description,
             "author": book.author,
             "cost": book.cost,
             "score": book.score,
@@ -107,7 +107,7 @@ pub async fn get_book_by_id(pool: web::Data<PgPool>, data: web::Query<Info>) -> 
         Ok(book)=>{
             log::info!("Book has been fetched");
             let books = vec![book];
-            HttpResponse::Ok().json(create_reduced_info_json(books))
+            HttpResponse::Ok().json(create_reduced_info_json(books).get(0))
         }
         Err(e) =>{
             log::info!("Failed to fetch book {}", e);

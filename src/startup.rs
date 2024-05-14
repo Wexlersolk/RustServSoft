@@ -27,7 +27,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             .route("/new_book", web::post().to(new_book))
             .route("/upload_book", web::post().to(upload_file))
             .route("/get_all_books", web::get().to(get_all_books))
-            .route("/get_all_sorted_books", web::get().to(get_all_sorted_books))
+            .route("/get_popular_books", web::get().to(get_popular_books))
             .route("/get_sorted_books", web::get().to(get_sorted_books))
             .route("/get_book_file", web::get().to(get_book_file))
             .route("/get_book_by_id", web::get().to(get_book_by_id))
