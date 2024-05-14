@@ -85,7 +85,6 @@ pub async fn new_book(data: web::Json<BookData>, pool: web::Data<PgPool>) -> Htt
 pub fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
     let mut json_vec = vec![];
     for book in books {
-        log::info!("current book is {}", book.name.clone().unwrap());
         let image_path = format!("{}{}", IMAGE_DIRECTORY, book.img_name.unwrap());
         let json_book = json!({
             "id": book.book_id,
