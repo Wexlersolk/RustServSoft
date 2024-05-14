@@ -1,60 +1,146 @@
 {
   "db": "PostgreSQL",
-  "1de3b42ba80f93be8845029141e36a26609bc438aff80050e12b7dc673a045c0": {
+  "113eaf58ada163e39a006fc76bfe7b9b9b9b7c2a299b13411b3d3f1bd75aa45a": {
     "describe": {
       "columns": [
         {
-          "name": "name",
+          "name": "book_id",
           "ordinal": 0,
-          "type_info": "Varchar"
+          "type_info": "Uuid"
         },
         {
-          "name": "genre_name",
+          "name": "name",
           "ordinal": 1,
           "type_info": "Varchar"
         },
         {
-          "name": "author",
+          "name": "genre_name",
           "ordinal": 2,
           "type_info": "Varchar"
         },
         {
-          "name": "cost",
+          "name": "author",
           "ordinal": 3,
-          "type_info": "Float8"
+          "type_info": "Varchar"
         },
         {
-          "name": "score",
+          "name": "cost",
           "ordinal": 4,
           "type_info": "Float8"
         },
         {
-          "name": "downloads",
+          "name": "score",
           "ordinal": 5,
+          "type_info": "Float8"
+        },
+        {
+          "name": "downloads",
+          "ordinal": 6,
           "type_info": "Int4"
         },
         {
           "name": "img_name",
-          "ordinal": 6,
+          "ordinal": 7,
           "type_info": "Varchar"
         },
         {
           "name": "created_at",
-          "ordinal": 7,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "updated_at",
           "ordinal": 8,
           "type_info": "Timestamptz"
         },
         {
-          "name": "img",
+          "name": "updated_at",
           "ordinal": 9,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "img",
+          "ordinal": 10,
           "type_info": "Text"
         }
       ],
       "nullable": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT book_view.*, '' as img FROM book_view WHERE genre_name = $1 ORDER BY cost DESC"
+  },
+  "1de3b42ba80f93be8845029141e36a26609bc438aff80050e12b7dc673a045c0": {
+    "describe": {
+      "columns": [
+        {
+          "name": "book_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "genre_name",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "author",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "cost",
+          "ordinal": 4,
+          "type_info": "Float8"
+        },
+        {
+          "name": "score",
+          "ordinal": 5,
+          "type_info": "Float8"
+        },
+        {
+          "name": "downloads",
+          "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "img_name",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 8,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 9,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "img",
+          "ordinal": 10,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        true,
         true,
         true,
         true,
@@ -71,6 +157,104 @@
       }
     },
     "query": "SELECT book_view.*, '' as img FROM book_view"
+  },
+  "27e6d77b422b836502268d58b88dad53b22b3bbd9c7476e59a32c02d1f56e021": {
+    "describe": {
+      "columns": [
+        {
+          "name": "genre_name",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        true
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "Select genre_name FROM genre_table "
+  },
+  "2ba2c4c4d82029a06ce95ba10e0a384d1ca279e20a5aeff0f6def4f60497d0ff": {
+    "describe": {
+      "columns": [
+        {
+          "name": "book_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "genre_name",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "author",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "cost",
+          "ordinal": 4,
+          "type_info": "Float8"
+        },
+        {
+          "name": "score",
+          "ordinal": 5,
+          "type_info": "Float8"
+        },
+        {
+          "name": "downloads",
+          "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "img_name",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 8,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 9,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "img",
+          "ordinal": 10,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT book_view.*, '' as img FROM book_view WHERE genre_name = $1 ORDER BY downloads DESC"
   },
   "2c9d4ef5e8da9618722921605af5849b89229739f95daeee59bef637b7494330": {
     "describe": {
@@ -278,6 +462,84 @@
     },
     "query": "Select * FROM genre_table WHERE genre_name = $1"
   },
+  "a92dcdeed9f197fb475215dd174700d17bcce3a03c372acec750076ac4b440a5": {
+    "describe": {
+      "columns": [
+        {
+          "name": "book_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "genre_name",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "author",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "cost",
+          "ordinal": 4,
+          "type_info": "Float8"
+        },
+        {
+          "name": "score",
+          "ordinal": 5,
+          "type_info": "Float8"
+        },
+        {
+          "name": "downloads",
+          "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "img_name",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 8,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 9,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "img",
+          "ordinal": 10,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        null
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT book_view.*, '' as img FROM book_view ORDER BY downloads DESC"
+  },
   "c36c37181a82901cc44624e4b8f508b13aa1d7f4a4a8fd7d76e9c8908eb5a400": {
     "describe": {
       "columns": [
@@ -348,6 +610,86 @@
       }
     },
     "query": "\n        INSERT INTO user_table (user_id, login, password, email)\n        VALUES ($1, $2, $3, $4)\n        "
+  },
+  "e3006efb576f38bddb28069a92b5c7695f0fb2b993475ac0365a661940efdf16": {
+    "describe": {
+      "columns": [
+        {
+          "name": "book_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "genre_name",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "author",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "cost",
+          "ordinal": 4,
+          "type_info": "Float8"
+        },
+        {
+          "name": "score",
+          "ordinal": 5,
+          "type_info": "Float8"
+        },
+        {
+          "name": "downloads",
+          "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "img_name",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "created_at",
+          "ordinal": 8,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "ordinal": 9,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "img",
+          "ordinal": 10,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT book_view.*, '' as img FROM book_view WHERE book_id = $1"
   },
   "fd90449fea9f860f7ea5c10121bb286908a222f813bfd48a7b8dfac36fd8df97": {
     "describe": {
