@@ -139,7 +139,7 @@ pub async fn authorize(
     secret: web::Data<String>,
 ) -> HttpResponse {
     match sqlx::query!(
-        "SELECT user_id FROM user_table WHERE email = $1 AND password = $2",
+        "SELECT user_id, login, email, access_id FROM user_table WHERE email = $1 AND password = $2",
         form.email,
         digest(form.password.as_ref().unwrap().trim())
     )
@@ -150,7 +150,10 @@ pub async fn authorize(
             log::info!("User has been fetched");
             let auth_token = encode_token(user.user_id, secret).await;
             let json_response = json!({
-                "jwt_token": auth_token
+                "jwt_token": auth_token,
+                "login": user.login,
+                "access_id": user.access_id,
+                "email": user.email
             });
             HttpResponse::Ok().json(json_response)
         }
