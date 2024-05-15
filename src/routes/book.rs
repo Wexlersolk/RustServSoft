@@ -15,6 +15,12 @@ pub struct Info {
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
+pub struct NewInfo {
+    parameter: String,
+    book_id: Uuid
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
 pub struct BookData {
     pub book_id: Option<Uuid>,
     pub name: Option<String>,
@@ -101,15 +107,22 @@ pub fn create_reduced_info_json(books: Vec<BookData>) -> Vec<Value> {
     json_vec
 }
 
-pub async fn get_book_by_id(pool: web::Data<PgPool>, data: web::Query<Info>) -> HttpResponse{
+pub async fn get_book_by_id(pool: web::Data<PgPool>, data: web::Query<Info>) -> HttpResponse {
     let book_id: Uuid = data.parameter.parse().unwrap();
-    match sqlx::query_as!(BookData,"SELECT book_view.*, '' as img FROM book_view WHERE book_id = $1", book_id).fetch_one(pool.as_ref()).await {
-        Ok(book)=>{
+    match sqlx::query_as!(
+        BookData,
+        "SELECT book_view.*, '' as img FROM book_view WHERE book_id = $1",
+        book_id
+    )
+    .fetch_one(pool.as_ref())
+    .await
+    {
+        Ok(book) => {
             log::info!("Book has been fetched");
             let books = vec![book];
             HttpResponse::Ok().json(create_reduced_info_json(books).get(0))
         }
-        Err(e) =>{
+        Err(e) => {
             log::info!("Failed to fetch book {}", e);
             HttpResponse::InternalServerError().finish()
         }
@@ -118,12 +131,9 @@ pub async fn get_book_by_id(pool: web::Data<PgPool>, data: web::Query<Info>) -> 
 
 pub async fn get_book_file(pool: web::Data<PgPool>, data: web::Query<Info>) -> HttpResponse {
     let book_id: Uuid = data.parameter.parse().unwrap();
-    let query = sqlx::query!(
-        "Select file FROM book_files WHERE book_id = $1",
-        book_id
-    )
-    .fetch_one(pool.as_ref())
-    .await;
+    let query = sqlx::query!("Select file FROM book_files WHERE book_id = $1", book_id)
+        .fetch_one(pool.as_ref())
+        .await;
     match query {
         Ok(result) => {
             log::info!("File has been fetched");
@@ -139,12 +149,15 @@ pub async fn get_book_file(pool: web::Data<PgPool>, data: web::Query<Info>) -> H
 pub async fn upload_file(
     file: Bytes,
     pool: web::Data<PgPool>,
-    data: web::Query<Info>,
+    data: web::Query<NewInfo>,
 ) -> HttpResponse {
     let query = sqlx::query!(
-        "INSERT INTO book_table (file_name, file) VALUES ($1, $2)",
+        "UPDATE book_table 
+        SET (file_name, file) =($1,$2)
+        WHERE book_id = $3",
         &data.parameter,
-        &file[..]
+        &file[..],
+        data.book_id
     )
     .execute(pool.as_ref())
     .await;
@@ -159,5 +172,3 @@ pub async fn upload_file(
         }
     }
 }
-
-

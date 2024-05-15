@@ -25,7 +25,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             .route("/health_check", web::get().to(health_check))
             //Books
             .route("/new_book", web::post().to(new_book))
-            .route("/upload_book", web::post().to(upload_file))
+            .route("/upload_book", web::put().to(upload_file))
             .route("/get_all_books", web::get().to(get_all_books))
             .route("/get_popular_books", web::get().to(get_popular_books))
             .route("/get_sorted_books", web::get().to(get_sorted_books))
@@ -35,10 +35,11 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             .route("/get_all_genres", web::get().to(get_all_genres))
             //JWT
             .route("/decode_token", web::post().to(decode_token))
+            .app_data(web::PayloadConfig::new(100 * 1024 * 1024))
             .app_data(db_pool.clone())
             .app_data(web::Data::<String>::new("Padishah Emperor".to_owned()))
-    })
-    .listen(listener)?
-    .run();
+        })
+        .listen(listener)?
+        .run();
     Ok(server)
 }
