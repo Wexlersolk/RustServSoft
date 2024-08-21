@@ -3,6 +3,7 @@
 docs.yaml 
 Dockerfile
 docker-compose.yml
+.dockerignore
 
   
   

@@ -1,15 +1,15 @@
+use letsgetrusty::configuration::{get_configuration, DatabaseSettings};
+use letsgetrusty::startup::run;
 use sqlx::PgPool;
 use sqlx::{Connection, Executor, PgConnection};
 use std::net::TcpListener;
 use uuid::Uuid;
-use letsgetrusty::configuration::{get_configuration, DatabaseSettings};
-use letsgetrusty::startup::run;
 
 pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
 }
- 
+
 async fn spawn_app() -> TestApp {
     let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
     let port = listener.local_addr().unwrap().port();
@@ -24,7 +24,7 @@ async fn spawn_app() -> TestApp {
         db_pool: connection_pool,
     }
 }
- 
+
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     let mut connection = PgConnection::connect(&config.connection_string_without_db())
         .await
@@ -42,3 +42,5 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .expect("Failed to migrate the database");
     connection_pool
 }
+
+//

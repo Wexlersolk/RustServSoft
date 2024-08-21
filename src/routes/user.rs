@@ -89,7 +89,10 @@ pub async fn update_password(
     }
 }
 
-pub async fn elevate_priviliges(pool: web::Data<PgPool>, data: web::Query<UserInfo>) -> HttpResponse {
+pub async fn elevate_priviliges(
+    pool: web::Data<PgPool>,
+    data: web::Query<UserInfo>,
+) -> HttpResponse {
     let user_id = Uuid::parse_str(data.parameter.as_str()).unwrap();
     match sqlx::query!(
         "

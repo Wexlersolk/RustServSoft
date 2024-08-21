@@ -22,7 +22,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             .route("/authorize", web::put().to(authorize))
             .route("/get_all_users", web::get().to(get_all_users))
             .route("/delete_user", web::delete().to(delete_user))
-            .route("/health_check", web::get().to(health_check))
+            .route("/", web::get().to(health_check))
             //Books
             .route("/new_book", web::post().to(new_book))
             .route("/upload_book", web::put().to(upload_file))
